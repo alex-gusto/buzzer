@@ -35,6 +35,8 @@ type ActivateQuestionVariables = {
   difficulty?: 'easy' | 'medium' | 'hard';
 };
 
+type CategoryMap = Record<string, string[]>;
+
 function slugifyCategory(label: string) {
   return label
     .trim()
@@ -42,6 +44,14 @@ function slugifyCategory(label: string) {
     .replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
+}
+
+function formatCategoryLabel(slug: string) {
+  return slug
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 export function HostView({ onExit }: HostViewProps) {
@@ -141,12 +151,16 @@ export function HostView({ onExit }: HostViewProps) {
   const lastResult = state?.lastResult ?? null;
   const currentTurn = state?.currentTurn ?? null;
 
-  const { data: categoriesData } = useQuery({
+  const inlineCategories = state?.categories ?? null;
+
+  const { data: categoriesFallback } = useQuery<CategoryMap>({
     queryKey: ['trivia-categories'],
     queryFn: getTriviaCategories,
     staleTime: 1000 * 60 * 60,
-    enabled: Boolean(session),
+    enabled: Boolean(session) && !inlineCategories,
   });
+
+  const categoriesData: CategoryMap | null = inlineCategories ?? categoriesFallback ?? null;
 
   const categoryOptions = useMemo(() => {
     if (!categoriesData) {
@@ -155,12 +169,15 @@ export function HostView({ onExit }: HostViewProps) {
 
     const options: Array<{ label: string; value: string }> = [];
 
-    for (const [group, subCategories] of Object.entries(categoriesData)) {
-      const groupSlug = slugifyCategory(group);
-      options.push({ label: group, value: groupSlug });
+    for (const [group, subCategories] of Object.entries(categoriesData) as Array<[string, string[]]>) {
+      const groupLabel = formatCategoryLabel(group);
+      options.push({ label: groupLabel, value: group });
 
       subCategories
-        .map((sub) => ({ label: `${group} · ${sub}`, value: slugifyCategory(sub) }))
+        .map((sub) => ({
+          label: `${groupLabel} · ${formatCategoryLabel(sub)}`,
+          value: sub,
+        }))
         .forEach((option) => options.push(option));
     }
 

@@ -48,6 +48,7 @@ export type RoomSnapshot = {
   players: PlayerSummary[];
   activeQuestion: ActiveQuestionSnapshot | null;
   lastResult: QuestionResultSnapshot | null;
+  categories: Record<string, string[]> | null;
 };
 
 export type RegisterMessage =

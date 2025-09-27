@@ -2,9 +2,9 @@ import WebSocket from 'ws';
 import { customAlphabet, nanoid } from 'nanoid';
 import type { FastifyBaseLogger } from 'fastify';
 
-import type { GameRoom, Player, RoomConnection, RoomSnapshot } from './types';
-import { RoomRegistry } from './roomRegistry';
-import { fetchTriviaQuestion } from './triviaApi';
+import type { GameRoom, Player, RoomConnection, RoomSnapshot } from './types.js';
+import { RoomRegistry } from './roomRegistry.js';
+import { fetchTriviaCategories, fetchTriviaQuestion } from './triviaApi.js';
 
 const roomCodeAlphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const generateRoomCode = customAlphabet(roomCodeAlphabet, 4);
@@ -27,7 +27,7 @@ export class GameStore {
     this.log = logger;
   }
 
-  createRoom() {
+  async createRoom() {
     let code = '';
     do {
       code = generateRoomCode();
@@ -44,7 +44,15 @@ export class GameStore {
       usedQuestions: new Set(),
       players: new Map(),
       connections: new Set(),
+      categories: null,
     };
+
+    try {
+      room.categories = await fetchTriviaCategories();
+    } catch (error) {
+      this.log.warn({ code, err: error }, 'Failed to preload trivia categories');
+      room.categories = null;
+    }
 
     this.rooms.set(room);
     this.log.info({ code }, 'Created new room');
@@ -156,7 +164,7 @@ export class GameStore {
     room.lastResult = undefined;
     room.questionActive = false;
     room.buzzedBy = undefined;
-    room.players.forEach((player) => delete player.buzzedAt);
+    room.players.forEach((player: Player) => delete player.buzzedAt);
 
     this.broadcastState(room);
     this.log.info(
@@ -192,7 +200,7 @@ export class GameStore {
 
     room.questionActive = true;
     room.buzzedBy = undefined;
-    room.players.forEach((player) => delete player.buzzedAt);
+    room.players.forEach((player: Player) => delete player.buzzedAt);
 
     this.broadcastState(room);
     this.log.info({ code, questionId: active.id }, 'Question opened for buzzers');
@@ -280,7 +288,7 @@ export class GameStore {
     room.activeQuestion = undefined;
     room.questionActive = false;
     room.buzzedBy = undefined;
-    room.players.forEach((player) => delete player.buzzedAt);
+    room.players.forEach((player: Player) => delete player.buzzedAt);
 
     this.broadcastState(room);
     this.log.info({ code, questionId: active.id }, 'Active question cancelled');
@@ -438,7 +446,7 @@ export class GameStore {
     room.activeQuestion = undefined;
     room.questionActive = false;
     room.buzzedBy = undefined;
-    room.players.forEach((player) => delete player.buzzedAt);
+    room.players.forEach((player: Player) => delete player.buzzedAt);
 
     this.advanceTurn(room, turnIndex);
 
@@ -497,6 +505,7 @@ export class GameStore {
       players,
       activeQuestion,
       lastResult,
+      categories: room.categories ?? null,
     };
   }
 

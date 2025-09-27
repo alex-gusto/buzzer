@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { RoomSnapshot } from './types';
+import type { RoomSnapshot } from './types.js';
 
 export const RegisterMessageSchema = z.object({
   type: z.literal('register'),

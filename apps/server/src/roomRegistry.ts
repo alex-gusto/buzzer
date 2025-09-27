@@ -1,4 +1,4 @@
-import type { GameRoom } from './types';
+import type { GameRoom } from './types.js';
 
 const normalizeCode = (code: string) => code.toUpperCase();
 

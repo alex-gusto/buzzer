@@ -1,18 +1,23 @@
+import "./loadEnv.js";
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
+import fastifyStatic from "@fastify/static";
 import WebSocket, { type RawData } from "ws";
 import { z } from "zod";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import { existsSync } from "node:fs";
 
-import { GameStore } from "./store";
-import { fetchTriviaCategories, fetchTriviaQuestions } from "./triviaApi";
-import type { ConnectionRole } from "./types";
+import { GameStore } from "./store.js";
+import { fetchTriviaCategories, fetchTriviaQuestions } from "./triviaApi.js";
+import type { ConnectionRole } from "./types.js";
 import {
   IncomingMessageSchema,
   RegisterMessageSchema,
   type RegisterMessage,
   type OutgoingMessage,
-} from "./messages";
+} from "./messages.js";
 
 const fastify = Fastify({
   logger: true,
@@ -95,7 +100,7 @@ function handleHostError(error: unknown, reply: FastifyReply, log: typeof fastif
 }
 
 fastify.post("/api/session", async (_, reply) => {
-  const room = store.createRoom();
+  const room = await store.createRoom();
   reply.code(201);
   return { code: room.code, hostSecret: room.hostSecret };
 });
@@ -260,6 +265,30 @@ fastify.get('/api/trivia/questions', async (request, reply) => {
     return { message: 'Failed to load trivia questions' };
   }
 });
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDistPath = path.resolve(__dirname, '../client');
+
+if (existsSync(clientDistPath)) {
+  await fastify.register(fastifyStatic, {
+    root: clientDistPath,
+    prefix: '/',
+    index: ['index.html'],
+  });
+
+  fastify.setNotFoundHandler((request, reply) => {
+    const url = request.raw.url ?? '';
+    if (url.startsWith('/api') || url.startsWith('/ws')) {
+      reply.callNotFound();
+      return;
+    }
+
+    reply.type('text/html').sendFile('index.html');
+  });
+} else {
+  fastify.log.warn({ clientDistPath }, 'Client dist directory not found; static asset serving disabled');
+}
 
 fastify.register(async (app) => {
   const wsHandler = (socket: WebSocket, request: FastifyRequest) => {

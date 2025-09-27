@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "Node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -11,7 +11,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "types": ["node"],
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@fastify/static": ["src/types/fastify-static"]
+    }
   },
   "include": [
     "src"

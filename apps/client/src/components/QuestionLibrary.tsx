@@ -18,13 +18,12 @@ type PreviewState = {
 
 const DIFFICULTIES: Array<'easy' | 'medium' | 'hard'> = ['easy', 'medium', 'hard'];
 
-function slugifyCategory(label: string) {
-  return label
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
+function formatLabel(slug: string) {
+  return slug
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 export function QuestionLibrary() {
@@ -44,11 +43,11 @@ export function QuestionLibrary() {
     }
 
     return Object.entries(categoriesData).map(([group, subcategories]) => ({
-      label: group,
-      value: slugifyCategory(group),
+      label: formatLabel(group),
+      value: group,
       subcategories: subcategories.map((sub) => ({
-        label: sub,
-        value: slugifyCategory(sub),
+        label: formatLabel(sub),
+        value: sub,
       })),
     }));
   }, [categoriesData]);

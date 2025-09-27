@@ -2,6 +2,7 @@
   "name": "buzzer",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "workspaces": [
     "apps/server",
     "apps/client"
@@ -9,7 +10,11 @@
   "scripts": {
     "dev": "concurrently \"npm --prefix apps/server run dev\" \"npm --prefix apps/client run dev\"",
     "dev:server": "npm --prefix apps/server run dev",
-    "dev:client": "npm --prefix apps/client run dev"
+    "dev:client": "npm --prefix apps/client run dev",
+    "dev:client:lan": "node scripts/dev-client-lan.mjs",
+    "fetch:trivia": "node scripts/fetch-trivia-fallback.mjs",
+    "build": "rm -rf dist && npm --prefix apps/client run build && npm --prefix apps/server run build",
+    "start": "node dist/server/index.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

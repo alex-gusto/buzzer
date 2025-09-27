@@ -47,6 +47,7 @@ export type RoomSnapshot = {
     pointsAwarded: number;
     correctAnswer: string;
   } | null;
+  categories: Record<string, string[]> | null;
 };
 
 export type RoomConnection = {
@@ -91,6 +92,7 @@ export type GameRoom = {
     title: string;
     correctAnswer: string;
   };
+  categories: Record<string, string[]> | null;
   players: Map<string, Player>;
   connections: Set<RoomConnection>;
 };
