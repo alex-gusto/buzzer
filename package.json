@@ -1,0 +1,17 @@
+{
+  "name": "buzzer",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/server",
+    "apps/client"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm --prefix apps/server run dev\" \"npm --prefix apps/client run dev\"",
+    "dev:server": "npm --prefix apps/server run dev",
+    "dev:client": "npm --prefix apps/client run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
