@@ -211,11 +211,9 @@ export function QuestionLibrary() {
                 {categories.map((category) => (
                   <div
                     key={`header-${category.value}`}
-                    className="flex flex-col justify-center items-center gap-1 border-b border-r border-slate-500/30 bg-slate-900/95 px-4 py-4 text-center"
+                    className="flex flex-col items-center justify-center gap-2 border-b text-cyan-200 border-r border-slate-500/30 bg-slate-900 px-4 py-4 text-center"
                   >
-                    <span className="text-sm font-semibold text-slate-100">
-                      {category.label}
-                    </span>
+                    {category.label}
                   </div>
                 ))}
 
@@ -284,9 +282,6 @@ export function QuestionLibrary() {
                 Close
               </button>
             </header>
-            <p className="mt-4 text-sm text-slate-300">
-              {modalQuestion.prompt}
-            </p>
             <div className="mt-4 flex flex-wrap gap-3 text-xs uppercase tracking-[0.3em] text-slate-500">
               <span>
                 Stage:{" "}
