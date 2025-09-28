@@ -34,6 +34,8 @@ export type RoomSnapshot = {
     assignedTo: { playerId: string; name: string } | null;
     answeringPlayer: { playerId: string; name: string } | null;
     attemptedPlayerIds: string[];
+    correctAnswer?: string;
+    choices?: string[];
   } | null;
   lastResult: {
     category: string;
@@ -48,6 +50,7 @@ export type RoomSnapshot = {
     correctAnswer: string;
   } | null;
   categories: Record<string, string[]> | null;
+  usedCategorySlots: string[];
 };
 
 export type RoomConnection = {
@@ -77,9 +80,12 @@ export type GameRoom = {
     question: string;
     title: string;
     correctAnswer: string;
+    incorrectAnswers: string[];
+    choices: string[];
     points: number;
   };
   usedQuestions: Set<string>;
+  usedCategorySlots: Set<string>;
   lastResult?: {
     id: string;
     answeredCorrectly: boolean;

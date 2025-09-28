@@ -19,6 +19,15 @@ function pointsForDifficulty(difficulty: string | undefined) {
   return DIFFICULTY_POINTS[difficulty ?? 'medium'] ?? 200;
 }
 
+function shuffleArray<T>(values: T[]): T[] {
+  const result = [...values];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 export class GameStore {
   private readonly rooms = new RoomRegistry();
   private readonly log: FastifyBaseLogger;
@@ -42,6 +51,7 @@ export class GameStore {
       currentTurnIndex: null,
       currentTurnId: null,
       usedQuestions: new Set(),
+      usedCategorySlots: new Set(),
       players: new Map(),
       connections: new Set(),
       categories: null,
@@ -138,13 +148,29 @@ export class GameStore {
       throw new Error('Set a player on turn before activating a question');
     }
 
+    const requestedCategory = options.category ?? null;
+    let triviaCategory = requestedCategory;
+
+    if (requestedCategory && room.categories?.[requestedCategory]?.length) {
+      const subcategories = room.categories[requestedCategory];
+      const shuffled = shuffleArray(subcategories);
+      triviaCategory = shuffled[0] ?? requestedCategory;
+    }
+
     const question = await fetchTriviaQuestion({
-      category: options.category,
+      category: triviaCategory ?? undefined,
       difficulty: options.difficulty,
       excludeIds: room.usedQuestions,
     });
 
     const points = pointsForDifficulty(question.difficulty);
+    const choices = shuffleArray([...question.incorrectAnswers, question.correctAnswer]);
+    const slotCategory = requestedCategory ?? question.category;
+    const slotKey = `${slotCategory}|${question.difficulty}`;
+
+    if (room.usedCategorySlots.has(slotKey)) {
+      throw new Error('That category and difficulty have already been played');
+    }
 
     room.activeQuestion = {
       id: question.id,
@@ -153,13 +179,17 @@ export class GameStore {
       answeringPlayerId: assignedTo,
       attemptedPlayerIds: new Set([assignedTo]),
       turnIndex: room.currentTurnIndex,
-      category: question.category,
+      category: slotCategory,
       difficulty: question.difficulty,
       question: question.question,
       title: question.question,
       correctAnswer: question.correctAnswer,
+      incorrectAnswers: [...question.incorrectAnswers],
+      choices,
       points,
     };
+
+    room.usedCategorySlots.add(slotKey);
 
     room.lastResult = undefined;
     room.questionActive = false;
@@ -349,12 +379,16 @@ export class GameStore {
   }
 
   broadcastState(room: GameRoom) {
-    const payload = JSON.stringify({ type: 'state', payload: this.buildSnapshot(room) });
-
     const staleConnections: RoomConnection[] = [];
 
     for (const connection of room.connections) {
       if (connection.socket.readyState === WebSocket.OPEN) {
+        const payload = JSON.stringify({
+          type: 'state',
+          payload: this.buildSnapshot(room, {
+            includeCorrectAnswer: connection.role === 'host',
+          }),
+        });
         connection.socket.send(payload);
         continue;
       }
@@ -372,7 +406,9 @@ export class GameStore {
       connection.socket.send(
         JSON.stringify({
           type: 'state',
-          payload: this.buildSnapshot(room),
+          payload: this.buildSnapshot(room, {
+            includeCorrectAnswer: connection.role === 'host',
+          }),
         }),
       );
     }
@@ -453,8 +489,12 @@ export class GameStore {
     this.broadcastState(room);
   }
 
-  private buildSnapshot(room: GameRoom): RoomSnapshot {
+  private buildSnapshot(
+    room: GameRoom,
+    options: { includeCorrectAnswer?: boolean } = {},
+  ): RoomSnapshot {
     const currentTurnId = this.getCurrentTurnPlayerId(room);
+    const includeCorrectAnswer = options.includeCorrectAnswer ?? false;
 
     const players = Array.from(room.players.values()).map((player) => ({
       id: player.id,
@@ -477,6 +517,12 @@ export class GameStore {
           assignedTo: this.playerRef(room, room.activeQuestion.assignedTo),
           answeringPlayer: this.playerRef(room, room.activeQuestion.answeringPlayerId),
           attemptedPlayerIds: Array.from(room.activeQuestion.attemptedPlayerIds),
+          ...(includeCorrectAnswer
+            ? {
+                correctAnswer: room.activeQuestion.correctAnswer,
+                choices: room.activeQuestion.choices,
+              }
+            : {}),
         }
       : null;
 
@@ -506,6 +552,7 @@ export class GameStore {
       activeQuestion,
       lastResult,
       categories: room.categories ?? null,
+      usedCategorySlots: Array.from(room.usedCategorySlots),
     };
   }
 

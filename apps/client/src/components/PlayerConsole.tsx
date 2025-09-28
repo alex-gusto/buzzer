@@ -89,14 +89,17 @@ export function PlayerConsole({ session, onExit }: PlayerConsoleProps) {
   }, [activeQuestion, canBuzz, hasAttempted, isAnswering, state?.currentTurn, session.playerId]);
 
   const handleExit = () => {
-    queryClient.removeQueries({ queryKey: ['player-session', session.code.toUpperCase()], exact: true });
+    queryClient.removeQueries({
+      queryKey: ['player-session', session.code.toUpperCase(), session.playerId],
+      exact: true,
+    });
 
     if (onExit) {
       onExit();
       return;
     }
 
-    navigate(`/?code=${session.code}`);
+    navigate(`/${session.code}`);
   };
 
   return (
@@ -112,11 +115,11 @@ export function PlayerConsole({ session, onExit }: PlayerConsoleProps) {
             Leave
           </button>
           <div className="flex flex-col gap-1 text-center md:text-left">
-            <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Room code</span>
+            <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Nick:</span>
             <h2 className="text-3xl font-semibold tracking-[0.35em] text-slate-100 md:text-4xl">
-              {session.code}
+              {session.name}
             </h2>
-            <span className="text-sm text-slate-400">You are playing as {session.name}</span>
+            <span className="text-sm text-slate-400">You are playing at {session.code} room</span>
           </div>
           <span
             className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium capitalize ${statusStyles[status]}`}

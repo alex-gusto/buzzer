@@ -1,40 +1,71 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 
-import { getTriviaCategories, getTriviaQuestions } from '../api';
+import { useSessionConnection } from "../hooks/useSessionConnection";
+import { HostSecretError } from "./HostSecretError";
 
-type PreviewState = {
-  key: string;
-  label: string;
-  questions: Array<{
-    id: string;
-    question: string;
-    correctAnswer: string;
-    difficulty: string;
-    category: string;
-  }>;
+const DIFFICULTIES: Array<"easy" | "medium" | "hard"> = [
+  "easy",
+  "medium",
+  "hard",
+];
+const POINTS_BY_DIFFICULTY: Record<"easy" | "medium" | "hard", number> = {
+  easy: 150,
+  medium: 250,
+  hard: 400,
 };
-
-const DIFFICULTIES: Array<'easy' | 'medium' | 'hard'> = ['easy', 'medium', 'hard'];
 
 function formatLabel(slug: string) {
   return slug
-    .split('_')
+    .split("_")
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+    .join(" ");
+}
+
+function pointsForDifficulty(difficulty: string) {
+  if (
+    difficulty === "easy" ||
+    difficulty === "medium" ||
+    difficulty === "hard"
+  ) {
+    return POINTS_BY_DIFFICULTY[difficulty];
+  }
+  return 0;
 }
 
 export function QuestionLibrary() {
-  const { data: categoriesData, isLoading, isError } = useQuery({
-    queryKey: ['trivia-categories'],
-    queryFn: getTriviaCategories,
-    staleTime: 1000 * 60 * 60,
+  const params = useParams();
+  const code = params.code?.toUpperCase();
+  const [searchParams] = useSearchParams();
+  const hostSecret = searchParams.get("hostSecret");
+
+  const sanitizedHostSecret = hostSecret?.trim() ?? "";
+
+  if (!code) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (sanitizedHostSecret.length === 0) {
+    return <HostSecretError fallbackPath={`/${code}`} />;
+  }
+
+  const registerPayload = useMemo(
+    () => ({
+      type: "register" as const,
+      role: "host" as const,
+      hostSecret: sanitizedHostSecret,
+    }),
+    [sanitizedHostSecret]
+  );
+
+  const { state, lastError } = useSessionConnection({
+    code,
+    registerPayload,
   });
 
   const categories = useMemo(() => {
-    if (!categoriesData) {
+    if (!state?.categories) {
       return [] as Array<{
         label: string;
         value: string;
@@ -42,7 +73,7 @@ export function QuestionLibrary() {
       }>;
     }
 
-    return Object.entries(categoriesData).map(([group, subcategories]) => ({
+    return Object.entries(state.categories).map(([group, subcategories]) => ({
       label: formatLabel(group),
       value: group,
       subcategories: subcategories.map((sub) => ({
@@ -50,163 +81,255 @@ export function QuestionLibrary() {
         value: sub,
       })),
     }));
-  }, [categoriesData]);
+  }, [state?.categories]);
 
-  const [preview, setPreview] = useState<PreviewState | null>(null);
-  const [loadingKey, setLoadingKey] = useState<string | null>(null);
+  const usedSlots = useMemo(() => {
+    const slots = state?.usedCategorySlots ?? [];
+    return new Set(slots.map((slot) => slot.toLowerCase()));
+  }, [state?.usedCategorySlots]);
 
-  const previewMutation = useMutation<
-    PreviewState,
-    Error,
-    { category?: string; difficulty?: 'easy' | 'medium' | 'hard'; label: string }
-  >({
-    mutationFn: async (params) => {
-      const questions = await getTriviaQuestions({
-        category: params.category,
-        difficulty: params.difficulty,
-        limit: 5,
-      });
+  const activeSlotKey = state?.activeQuestion
+    ? `${state.activeQuestion.category}|${state.activeQuestion.difficulty}`.toLowerCase()
+    : null;
 
-      return {
-        key: `${params.category ?? 'any'}|${params.difficulty ?? 'any'}`,
-        label: params.label,
-        questions,
-      } satisfies PreviewState;
-    },
-    onMutate: (variables) => {
-      setLoadingKey(`${variables.category ?? 'any'}|${variables.difficulty ?? 'any'}`);
-    },
-    onSuccess: (result) => {
-      setPreview(result);
-    },
-    onSettled: () => {
-      setLoadingKey(null);
-    },
-  });
+  const [dismissedQuestionId, setDismissedQuestionId] = useState<string | null>(
+    null
+  );
+  const [modalQuestion, setModalQuestion] = useState<{
+    id: string;
+    title: string;
+    prompt: string;
+    choices: string[];
+    correctAnswer: string;
+    category: string;
+    difficulty: string;
+    points: number;
+    stage: string;
+    assignedTo: string | null;
+    answeringPlayer: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const active = state?.activeQuestion;
+
+    if (
+      !active ||
+      !active.correctAnswer ||
+      !active.choices ||
+      active.choices.length === 0
+    ) {
+      setModalQuestion(null);
+      if (!active) {
+        setDismissedQuestionId(null);
+      }
+      return;
+    }
+
+    if (dismissedQuestionId === active.id) {
+      return;
+    }
+
+    setModalQuestion({
+      id: active.id,
+      title: active.title,
+      prompt: active.prompt,
+      choices: active.choices,
+      correctAnswer: active.correctAnswer,
+      category: active.category,
+      difficulty: active.difficulty,
+      points: active.points,
+      stage: active.stage,
+      assignedTo: active.assignedTo?.name ?? null,
+      answeringPlayer: active.answeringPlayer?.name ?? null,
+    });
+  }, [state?.activeQuestion, dismissedQuestionId]);
+
+  const columnTemplate = useMemo(() => {
+    if (categories.length === 0) {
+      return "1fr";
+    }
+    return `180px repeat(${categories.length}, minmax(160px, 1fr))`;
+  }, [categories.length]);
+
+  const isInitializing = !state && !lastError;
+  const hasError = Boolean(lastError) && !state;
+
+  const handleDismissModal = () => {
+    if (modalQuestion) {
+      setDismissedQuestionId(modalQuestion.id);
+      setModalQuestion(null);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-black px-6 py-10 text-slate-100">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 rounded-[28px] bg-slate-950/85 px-6 py-8 shadow-glow backdrop-blur">
-        <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <Fragment>
+      <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-900 via-slate-950 to-black text-slate-100">
+        <header className="flex flex-col gap-4 px-6 py-10 md:flex-row md:items-center md:justify-between">
           <Link
-            to="/"
+            to={
+              sanitizedHostSecret
+                ? `/${code}?hostSecret=${sanitizedHostSecret}`
+                : `/${code}`
+            }
             className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-500/40 px-4 py-2 text-sm text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60"
           >
             <span aria-hidden>←</span>
-            Back
+            Back to room
           </Link>
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Question Library</h1>
+            <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+              Question Library
+            </h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-300">
-              Browse categories and preview fresh questions pulled from The Trivia API.
+              Every slot below can be activated once per game. Points show what
+              a correct answer is worth.
             </p>
           </div>
         </header>
 
-        {isLoading ? (
-          <section className="rounded-2xl bg-slate-900/70 p-6 text-sm text-slate-300">
-            Loading categories…
-          </section>
-        ) : isError ? (
-          <section className="rounded-2xl bg-slate-900/70 p-6 text-sm text-rose-200">
-            Unable to load categories right now. Try refreshing later.
-          </section>
-        ) : (
-          <section className="grid gap-6 rounded-2xl bg-slate-900/70 p-6">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {categories.map((category) => (
-                <article
-                  key={category.value}
-                  className="flex flex-col gap-4 rounded-2xl border border-slate-500/30 bg-slate-900/80 p-5"
+        <main className="flex flex-1 flex-col">
+          {isInitializing ? (
+            <section className="mx-6 mb-10 rounded-2xl bg-slate-900/70 p-6 text-sm text-slate-300">
+              Loading categories…
+            </section>
+          ) : hasError ? (
+            <section className="mx-6 mb-10 rounded-2xl bg-slate-900/70 p-6 text-sm text-rose-200">
+              {lastError ??
+                "Unable to load categories right now. Try refreshing later."}
+            </section>
+          ) : categories.length === 0 ? (
+            <section className="mx-6 mb-10 rounded-2xl bg-slate-900/70 p-6 text-sm text-slate-300">
+              No categories are configured for this room yet. Start a game from
+              the host console to populate the board.
+            </section>
+          ) : (
+            <section className="flex flex-1 flex-col gap-6 px-6 pb-10">
+              <div className="flex-1 overflow-auto rounded-[32px] border border-slate-500/30 bg-slate-900/75">
+                <div
+                  className="grid min-w-full"
+                  style={{ gridTemplateColumns: columnTemplate }}
                 >
-                  <header className="space-y-1">
-                    <h2 className="text-lg font-semibold text-slate-100">{category.label}</h2>
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      {category.subcategories.length} subcategories
-                    </p>
-                  </header>
-                  <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                    {category.subcategories.slice(0, 4).map((sub) => (
-                      <span key={sub.value} className="rounded-full bg-slate-800/70 px-3 py-1">
-                        {sub.label}
-                      </span>
-                    ))}
-                    {category.subcategories.length > 4 ? <span>…</span> : null}
+                  <div className="sticky top-0 z-10 flex items-center justify-center border-b border-r border-slate-500/30 bg-slate-900/95 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                    Difficulty
                   </div>
-                  <div className="mt-2 grid gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
-                    {DIFFICULTIES.map((difficulty) => {
-                      const key = `${category.value}|${difficulty}`;
-                      const isLoadingPreview = previewMutation.isPending && loadingKey === key;
-
-                      return (
-                        <button
-                          key={difficulty}
-                          type="button"
-                          onClick={() =>
-                            previewMutation.mutate({
-                              category: category.value,
-                              difficulty,
-                              label: `${category.label} · ${difficulty}`,
-                            })
-                          }
-                          disabled={isLoadingPreview}
-                          className="inline-flex items-center justify-between rounded-xl border border-slate-500/40 bg-slate-950/70 px-4 py-2 text-left text-slate-100 transition hover:border-cyan-400/60 hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          <span>{difficulty}</span>
-                          <span className="text-[0.7rem] text-slate-400">Preview</span>
-                        </button>
-                      );
-                    })}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        previewMutation.mutate({
-                          category: category.value,
-                          difficulty: undefined,
-                          label: `${category.label} · random`,
-                        })
-                      }
-                      disabled={previewMutation.isPending && loadingKey === `${category.value}|any`}
-                      className="inline-flex items-center justify-between rounded-xl border border-slate-500/40 bg-slate-950/70 px-4 py-2 text-left text-slate-100 transition hover:border-cyan-400/60 hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  {categories.map((category) => (
+                    <div
+                      key={`header-${category.value}`}
+                      className="flex flex-col gap-1 border-b border-r border-slate-500/30 bg-slate-900/95 px-4 py-4 text-center"
                     >
-                      <span>Random difficulty</span>
-                      <span className="text-[0.7rem] text-slate-400">Preview</span>
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-        )}
+                      <span className="text-sm font-semibold text-slate-100">
+                        {category.label}
+                      </span>
+                      <span className="text-[10px] uppercase tracking-[0.35em] text-slate-500">
+                        {category.subcategories.length} topics
+                      </span>
+                    </div>
+                  ))}
 
-        {preview ? (
-          <section className="rounded-2xl bg-slate-900/70 p-6">
-            <div className="flex flex-col gap-2">
-              <h3 className="text-xl font-semibold text-slate-100">Sample questions · {preview.label}</h3>
-              <p className="text-sm text-slate-400">
-                Pulled live from The Trivia API. Each refresh may yield different prompts.
+                  {DIFFICULTIES.map((difficulty) => (
+                    <Fragment key={difficulty}>
+                      <div className="flex flex-col items-center justify-center border-b border-r border-slate-500/30 bg-slate-900/90 px-4 py-6 text-sm font-semibold uppercase tracking-[0.35em] text-slate-200">
+                        {formatLabel(difficulty)}
+                      </div>
+                      {categories.map((category) => {
+                        const slotKey =
+                          `${category.value}|${difficulty}`.toLowerCase();
+                        const used = usedSlots.has(slotKey);
+                        const isActive = activeSlotKey === slotKey;
+                        const points = pointsForDifficulty(difficulty);
+
+                        return (
+                          <div
+                            key={slotKey}
+                            className={`flex min-h-[160px] items-center justify-center border-b border-r border-slate-500/30 transition ${
+                              isActive
+                                ? "border-cyan-400/60 bg-cyan-400/10"
+                                : used
+                                ? "bg-slate-900/30"
+                                : "bg-slate-900/70"
+                            }`}
+                          >
+                            <span
+                              className={`text-4xl font-semibold tracking-tight md:text-5xl ${
+                                used ? "text-slate-500" : "text-slate-100"
+                              }`}
+                            >
+                              {points}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </Fragment>
+                  ))}
+                </div>
+              </div>
+              <p className="text-center text-xs uppercase tracking-[0.3em] text-slate-500">
+                Slots gray out after activation. Reusing the same category and
+                difficulty is blocked for the rest of the game.
               </p>
+            </section>
+          )}
+        </main>
+      </div>
+
+      {modalQuestion ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 px-4 py-10 backdrop-blur-sm">
+          <div className="w-full max-w-3xl rounded-[28px] border border-slate-500/40 bg-slate-950/95 p-8 shadow-xl">
+            <header className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                  {formatLabel(modalQuestion.category)} •{" "}
+                  {formatLabel(modalQuestion.difficulty)} •{" "}
+                  {modalQuestion.points} pts
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-100">
+                  {modalQuestion.title}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={handleDismissModal}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 px-4 py-2 text-sm text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60"
+              >
+                <span aria-hidden>✕</span>
+                Close
+              </button>
+            </header>
+            <p className="mt-4 text-sm text-slate-300">
+              {modalQuestion.prompt}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+              <span>
+                Stage:{" "}
+                {modalQuestion.stage === "awaitingHostDecision"
+                  ? "Awaiting Host Decision"
+                  : "Open For Buzz"}
+              </span>
+              {modalQuestion.assignedTo ? (
+                <span>Assigned: {modalQuestion.assignedTo}</span>
+              ) : null}
+              {modalQuestion.answeringPlayer ? (
+                <span>Answering: {modalQuestion.answeringPlayer}</span>
+              ) : null}
             </div>
-            <ul className="mt-4 grid gap-3">
-              {preview.questions.map((question) => (
+            <ul className="mt-6 grid gap-3">
+              {modalQuestion.choices.map((choice, index) => (
                 <li
-                  key={question.id}
-                  className="rounded-2xl border border-slate-500/30 bg-slate-950/80 p-4"
+                  key={`${modalQuestion.id}-choice-${index}`}
+                  className="rounded-2xl border border-slate-500/40 bg-slate-900/85 px-4 py-4 text-sm text-slate-100"
                 >
-                  <header className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                    <span>{question.category}</span>
-                    <span>{question.difficulty}</span>
-                  </header>
-                  <p className="mt-3 text-sm text-slate-100">{question.question}</p>
-                  <p className="mt-3 text-xs text-slate-400">
-                    Correct answer: <span className="text-slate-200">{question.correctAnswer}</span>
-                  </p>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                      Option {String.fromCharCode(65 + index)}
+                    </span>
+                    <span className="font-medium text-right">{choice}</span>
+                  </div>
                 </li>
               ))}
             </ul>
-          </section>
-        ) : null}
-      </div>
-    </div>
+          </div>
+        </div>
+      ) : null}
+    </Fragment>
   );
 }

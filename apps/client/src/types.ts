@@ -25,6 +25,8 @@ export type ActiveQuestionSnapshot = {
   assignedTo: PlayerRef | null;
   answeringPlayer: PlayerRef | null;
   attemptedPlayerIds: string[];
+  correctAnswer?: string;
+  choices?: string[];
 };
 
 export type QuestionResultSnapshot = {
@@ -49,6 +51,7 @@ export type RoomSnapshot = {
   activeQuestion: ActiveQuestionSnapshot | null;
   lastResult: QuestionResultSnapshot | null;
   categories: Record<string, string[]> | null;
+  usedCategorySlots: string[];
 };
 
 export type RegisterMessage =

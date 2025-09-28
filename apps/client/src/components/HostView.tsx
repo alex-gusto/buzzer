@@ -1,18 +1,26 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import {
   activateQuestion,
   cancelActiveQuestion,
-  createSession,
   markQuestionResult,
   openQuestionForBuzzers,
   setTurn,
   getTriviaCategories,
-} from '../api';
-import { useSessionConnection } from '../hooks/useSessionConnection';
-import type { RoomSnapshot, SocketStatus } from '../types';
+} from "../api";
+import { useSessionConnection } from "../hooks/useSessionConnection";
+import type { RoomSnapshot, SocketStatus } from "../types";
+import {
+  CategoryOption,
+  HostActiveQuestionCard,
+  HostAvailableSlotsCard,
+  HostLastResultCard,
+  HostPlayersList,
+  HostRoomSummary,
+  HostTurnControls,
+} from "./host";
 
 type HostSession = {
   code: string;
@@ -24,50 +32,55 @@ type HostViewProps = {
 };
 
 const statusStyles: Record<SocketStatus, string> = {
-  idle: 'bg-slate-500/20 text-slate-100',
-  connecting: 'bg-amber-500/20 text-amber-200',
-  open: 'bg-emerald-500/20 text-emerald-200',
-  closed: 'bg-rose-500/20 text-rose-200',
+  idle: "bg-slate-500/20 text-slate-100",
+  connecting: "bg-amber-500/20 text-amber-200",
+  open: "bg-emerald-500/20 text-emerald-200",
+  closed: "bg-rose-500/20 text-rose-200",
 };
 
 type ActivateQuestionVariables = {
   category?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  difficulty?: "easy" | "medium" | "hard";
 };
 
 type CategoryMap = Record<string, string[]>;
 
-function slugifyCategory(label: string) {
-  return label
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
-}
+const DIFFICULTIES: Array<"easy" | "medium" | "hard"> = [
+  "easy",
+  "medium",
+  "hard",
+];
 
 function formatCategoryLabel(slug: string) {
   return slug
-    .split('_')
+    .split("_")
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+    .join(" ");
 }
 
 export function HostView({ onExit }: HostViewProps) {
-  const [session, setSession] = useState<HostSession | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
+  const params = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  const code = params.code?.toUpperCase() ?? null;
+  const hostSecretParam = searchParams.get("hostSecret");
+
+  const [session, setSession] = useState<HostSession | null>(() =>
+    code && hostSecretParam ? { code, hostSecret: hostSecretParam } : null
+  );
+  const [actionError, setActionError] = useState<string | null>(null);
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
   useEffect(() => {
-    if (copyStatus === 'idle') {
+    if (code && hostSecretParam) {
+      setSession({ code, hostSecret: hostSecretParam });
       return;
     }
 
-    const timeout = window.setTimeout(() => setCopyStatus('idle'), 2000);
-    return () => window.clearTimeout(timeout);
-  }, [copyStatus]);
+    setSession(null);
+  }, [code, hostSecretParam]);
 
   const handleExit = () => {
     if (onExit) {
@@ -75,58 +88,22 @@ export function HostView({ onExit }: HostViewProps) {
       return;
     }
 
-    navigate('/');
+    navigate("/");
   };
 
-  const handleCopyCode = async () => {
-    if (!session?.code) {
-      return;
-    }
-
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(session.code);
-      } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = session.code;
-        textarea.setAttribute('readonly', '');
-        textarea.style.position = 'absolute';
-        textarea.style.left = '-9999px';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-      }
-
-      setCopyStatus('copied');
-    } catch (error) {
-      console.error('Failed to copy room code', error);
-      setCopyStatus('error');
-    }
-  };
-
-  const createMutation = useMutation({
-    mutationFn: createSession,
-    onSuccess: (data) => {
-      setSession(data);
-      setActionError(null);
-    },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Unable to create a game right now';
-      setActionError(message);
-    },
-  });
+  const inviteLink = session ? `${origin}/${session.code}` : '';
+  const boardLink = session ? `${origin}/${session.code}/questions?hostSecret=${session.hostSecret}` : '';
 
   const registerPayload = useMemo(
     () =>
       session
         ? ({
-            type: 'register',
-            role: 'host',
+            type: "register",
+            role: "host",
             hostSecret: session.hostSecret,
           } as const)
         : undefined,
-    [session],
+    [session]
   );
 
   const { state, status, lastError } = useSessionConnection({
@@ -136,7 +113,7 @@ export function HostView({ onExit }: HostViewProps) {
 
   const players = useMemo(() => {
     if (!state) {
-      return [] as RoomSnapshot['players'];
+      return [] as RoomSnapshot["players"];
     }
 
     return [...state.players].sort((a, b) => {
@@ -152,121 +129,198 @@ export function HostView({ onExit }: HostViewProps) {
   const currentTurn = state?.currentTurn ?? null;
 
   const inlineCategories = state?.categories ?? null;
+  const usedCategorySlots = useMemo(() => {
+    const slots = state?.usedCategorySlots ?? [];
+    return new Set(slots.map((slot) => slot.toLowerCase()));
+  }, [state?.usedCategorySlots]);
 
   const { data: categoriesFallback } = useQuery<CategoryMap>({
-    queryKey: ['trivia-categories'],
+    queryKey: ["trivia-categories"],
     queryFn: getTriviaCategories,
     staleTime: 1000 * 60 * 60,
     enabled: Boolean(session) && !inlineCategories,
   });
 
-  const categoriesData: CategoryMap | null = inlineCategories ?? categoriesFallback ?? null;
+  const categoriesData: CategoryMap | null =
+    inlineCategories ?? categoriesFallback ?? null;
 
   const categoryOptions = useMemo(() => {
     if (!categoriesData) {
-      return [] as Array<{ label: string; value: string }>;
+      return [] as Array<{
+        label: string;
+        value: string;
+        availableDifficulties: Array<"easy" | "medium" | "hard">;
+      }>;
     }
 
-    const options: Array<{ label: string; value: string }> = [];
+    const options: Array<{
+      label: string;
+      value: string;
+      availableDifficulties: Array<"easy" | "medium" | "hard">;
+    }> = [];
 
-    for (const [group, subCategories] of Object.entries(categoriesData) as Array<[string, string[]]>) {
+    const addOption = (value: string, label: string) => {
+      const available = DIFFICULTIES.filter(
+        (difficulty) =>
+          !usedCategorySlots.has(`${value}|${difficulty}`.toLowerCase())
+      );
+
+      if (available.length > 0) {
+        options.push({ label, value, availableDifficulties: available });
+      }
+    };
+
+    for (const [group] of Object.entries(categoriesData) as Array<
+      [string, string[]]
+    >) {
       const groupLabel = formatCategoryLabel(group);
-      options.push({ label: groupLabel, value: group });
-
-      subCategories
-        .map((sub) => ({
-          label: `${groupLabel} · ${formatCategoryLabel(sub)}`,
-          value: sub,
-        }))
-        .forEach((option) => options.push(option));
+      addOption(group, groupLabel);
     }
 
     return options;
-  }, [categoriesData]);
+  }, [categoriesData, usedCategorySlots]);
 
-  const [selectedCategory, setSelectedCategory] = useState<string | ''>('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | ''>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<
+    "easy" | "medium" | "hard" | ""
+  >("");
+
+  useEffect(() => {
+    if (categoryOptions.length === 0) {
+      if (selectedCategory !== "") {
+        setSelectedCategory("");
+      }
+      return;
+    }
+
+    const exists = categoryOptions.some(
+      (option) => option.value === selectedCategory
+    );
+    if (!exists) {
+      setSelectedCategory(categoryOptions[0]?.value ?? "");
+    }
+  }, [categoryOptions, selectedCategory]);
+
+  const availableDifficulties = useMemo(() => {
+    if (!selectedCategory) {
+      return [] as Array<"easy" | "medium" | "hard">;
+    }
+
+    const option = categoryOptions.find(
+      (item) => item.value === selectedCategory
+    );
+    return option?.availableDifficulties ?? [];
+  }, [categoryOptions, selectedCategory]);
+
+  useEffect(() => {
+    if (
+      !availableDifficulties.includes(
+        selectedDifficulty as "easy" | "medium" | "hard"
+      )
+    ) {
+      setSelectedDifficulty(availableDifficulties[0] ?? "");
+    }
+  }, [availableDifficulties, selectedDifficulty]);
 
   const setTurnMutation = useMutation<void, Error, string>({
     mutationFn: async (playerId: string) => {
       if (!session) {
-        throw new Error('No active session');
+        throw new Error("No active session");
       }
       await setTurn(session.code, session.hostSecret, playerId);
     },
     onSuccess: () => setActionError(null),
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : 'Unable to update turn');
+      setActionError(
+        error instanceof Error ? error.message : "Unable to update turn"
+      );
     },
   });
 
-  const activateQuestionMutation = useMutation<void, Error, ActivateQuestionVariables>({
+  const activateQuestionMutation = useMutation<
+    void,
+    Error,
+    ActivateQuestionVariables
+  >({
     mutationFn: async (input: ActivateQuestionVariables) => {
       if (!session) {
-        throw new Error('No active session');
+        throw new Error("No active session");
       }
       await activateQuestion(session.code, session.hostSecret, input);
     },
     onSuccess: () => setActionError(null),
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : 'Unable to activate question');
+      setActionError(
+        error instanceof Error ? error.message : "Unable to activate question"
+      );
     },
   });
 
   const openBuzzersMutation = useMutation({
     mutationFn: async () => {
       if (!session) {
-        throw new Error('No active session');
+        throw new Error("No active session");
       }
       await openQuestionForBuzzers(session.code, session.hostSecret);
     },
     onSuccess: () => setActionError(null),
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : 'Unable to open buzzers');
+      setActionError(
+        error instanceof Error ? error.message : "Unable to open buzzers"
+      );
     },
   });
 
   const markCorrectMutation = useMutation<void, Error, string | undefined>({
     mutationFn: async (playerId) => {
       if (!session) {
-        throw new Error('No active session');
+        throw new Error("No active session");
       }
-      await markQuestionResult(session.code, session.hostSecret, 'correct', { playerId });
+      await markQuestionResult(session.code, session.hostSecret, "correct", {
+        playerId,
+      });
     },
     onSuccess: () => setActionError(null),
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : 'Unable to mark correct');
+      setActionError(
+        error instanceof Error ? error.message : "Unable to mark correct"
+      );
     },
   });
 
   const markIncorrectMutation = useMutation<void, Error, boolean>({
     mutationFn: async (openBuzzers) => {
       if (!session) {
-        throw new Error('No active session');
+        throw new Error("No active session");
       }
-      await markQuestionResult(session.code, session.hostSecret, 'incorrect', { openBuzzers });
+      await markQuestionResult(session.code, session.hostSecret, "incorrect", {
+        openBuzzers,
+      });
     },
     onSuccess: () => setActionError(null),
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : 'Unable to mark incorrect');
+      setActionError(
+        error instanceof Error ? error.message : "Unable to mark incorrect"
+      );
     },
   });
 
   const cancelQuestionMutation = useMutation({
     mutationFn: async () => {
       if (!session) {
-        throw new Error('No active session');
+        throw new Error("No active session");
       }
       await cancelActiveQuestion(session.code, session.hostSecret);
     },
     onSuccess: () => setActionError(null),
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : 'Unable to cancel question');
+      setActionError(
+        error instanceof Error ? error.message : "Unable to cancel question"
+      );
     },
   });
 
   const anyMutationPending =
-    createMutation.isPending ||
     setTurnMutation.isPending ||
     activateQuestionMutation.isPending ||
     openBuzzersMutation.isPending ||
@@ -279,38 +333,50 @@ export function HostView({ onExit }: HostViewProps) {
       return null;
     }
 
-    if (activeQuestion.stage === 'awaitingHostDecision') {
+    if (activeQuestion.stage === "awaitingHostDecision") {
       return activeQuestion.answeringPlayer
         ? `Reviewing answer from ${activeQuestion.answeringPlayer.name}`
-        : 'Waiting for the assigned player to answer';
+        : "Waiting for the assigned player to answer";
     }
 
-    if (activeQuestion.stage === 'openForBuzz') {
-      return 'Buzzers are open';
+    if (activeQuestion.stage === "openForBuzz") {
+      return "Buzzers are open";
     }
 
     return null;
   }, [activeQuestion]);
 
-  const canActivateQuestion = Boolean(session && !anyMutationPending && !activeQuestion && currentTurn);
+  const canActivateQuestion = Boolean(
+    session &&
+      !anyMutationPending &&
+      !activeQuestion &&
+      currentTurn &&
+      selectedCategory &&
+      selectedDifficulty &&
+      availableDifficulties.includes(
+        selectedDifficulty as "easy" | "medium" | "hard"
+      )
+  );
 
   const canMarkCorrect = Boolean(
     activeQuestion &&
-      activeQuestion.stage === 'awaitingHostDecision' &&
-      activeQuestion.answeringPlayer,
+      activeQuestion.stage === "awaitingHostDecision" &&
+      activeQuestion.answeringPlayer
   );
 
   const canOpenBuzzers = Boolean(
     activeQuestion &&
-      activeQuestion.stage === 'awaitingHostDecision' &&
-      !openBuzzersMutation.isPending,
+      activeQuestion.stage === "awaitingHostDecision" &&
+      !openBuzzersMutation.isPending
   );
 
-  const canCloseIncorrect = Boolean(activeQuestion && !markIncorrectMutation.isPending);
+  const canCloseIncorrect = Boolean(
+    activeQuestion && !markIncorrectMutation.isPending
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-black px-6 py-10 text-slate-100">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 rounded-[28px] bg-slate-950/85 px-6 py-8 shadow-glow backdrop-blur">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 rounded-[28px] bg-slate-950/85 px-6 py-8 shadow-glow backdrop-blur">
         <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <button
             type="button"
@@ -321,259 +387,101 @@ export function HostView({ onExit }: HostViewProps) {
             Back
           </button>
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Host Console</h1>
+            <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+              Host Console
+            </h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-300">
               Guide the game, queue questions, and confirm answers.
             </p>
           </div>
         </header>
 
-        {!session ? (
-          <div className="mt-8 grid place-items-center rounded-2xl border border-dashed border-slate-500/40 bg-slate-900/60 p-12 text-center">
-            <p className="text-lg text-slate-200">Ready to run the show?</p>
-            <button
-              type="button"
-              className="mt-6 inline-flex items-center rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-6 py-3 text-base font-semibold text-slate-950 transition hover:from-cyan-300 hover:to-indigo-400"
-              onClick={() => createMutation.mutate()}
-              disabled={createMutation.isPending}
-            >
-              {createMutation.isPending ? 'Creating…' : 'Create Game'}
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
-            <section className="flex flex-col gap-4 rounded-2xl bg-slate-900/70 p-6 md:flex-row md:items-center md:justify-between">
-              <div>
-                <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Room code</span>
-                <p className="mt-2 text-4xl font-semibold tracking-[0.35em] text-slate-100 md:text-5xl">
-                  {session.code}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-3 text-sm text-slate-100">
-                <div className="rounded-full">
-                  <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${statusStyles[status]}`}>
-                    <span className="h-2 w-2 rounded-full bg-current" />
-                    {status}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCopyCode}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-200 transition hover:border-slate-300/60 hover:bg-slate-800/60"
-                >
-                  <span>{copyStatus === 'copied' ? 'Copied!' : copyStatus === 'error' ? 'Copy failed' : 'Copy code'}</span>
-                  <span aria-hidden className="text-base">⧉</span>
-                </button>
-              </div>
-            </section>
-
-            <section className="grid gap-4 rounded-2xl bg-slate-900/70 p-6 md:grid-cols-[minmax(220px,280px),1fr] md:items-start">
-              <div className="flex flex-col gap-3">
-                <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Current turn</span>
-                <strong className="text-2xl text-slate-100">{currentTurn?.name ?? '—'}</strong>
-                <p className="text-sm text-slate-300">{activeQuestionStatus ?? 'Waiting for the next question.'}</p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => cancelQuestionMutation.mutate()}
-                    disabled={cancelQuestionMutation.isPending || !activeQuestion}
-                    className="inline-flex items-center justify-center rounded-xl border border-slate-500/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Cancel question
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="grid gap-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
-                  Category
-                  <select
-                    value={selectedCategory}
-                    onChange={(event) => setSelectedCategory(event.target.value as typeof selectedCategory)}
-                    className="rounded-xl border border-slate-500/40 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/40"
-                  >
-                    <option value="">Any category</option>
-                    {categoryOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid gap-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
-                  Difficulty
-                  <select
-                    value={selectedDifficulty}
-                    onChange={(event) =>
-                      setSelectedDifficulty((event.target.value as typeof selectedDifficulty) || '')
-                    }
-                    className="rounded-xl border border-slate-500/40 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/40"
-                  >
-                    <option value="">Any difficulty</option>
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                  </select>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const difficulty = selectedDifficulty ? (selectedDifficulty as 'easy' | 'medium' | 'hard') : undefined;
-                    void activateQuestionMutation.mutateAsync({
-                      category: selectedCategory || undefined,
-                      difficulty,
-                    });
-                  }}
-                  disabled={!canActivateQuestion}
-                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:from-cyan-300 hover:to-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Activate question
-                </button>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openBuzzersMutation.mutate()}
-                    disabled={!canOpenBuzzers}
-                    className="inline-flex items-center justify-center rounded-xl border border-slate-500/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Open buzzers
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => markIncorrectMutation.mutate(false)}
-                    disabled={!canCloseIncorrect}
-                    className="inline-flex items-center justify-center rounded-xl border border-slate-500/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Mark incorrect
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => markIncorrectMutation.mutate(true)}
-                    disabled={!activeQuestion || activeQuestion.stage !== 'awaitingHostDecision' || markIncorrectMutation.isPending}
-                    className="inline-flex items-center justify-center rounded-xl border border-slate-500/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Pass to buzzers
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => markCorrectMutation.mutate(activeQuestion?.answeringPlayer?.playerId)}
-                    disabled={!canMarkCorrect}
-                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-950 transition hover:from-cyan-300 hover:to-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Mark correct
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-2xl bg-slate-900/70 p-6">
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-xl font-semibold text-slate-100">Players</h3>
-                <span className="text-sm text-slate-400">{players.length} joined</span>
-              </div>
-              <ul className="mt-4 grid gap-3">
-                {players.length === 0 ? (
-                  <li className="rounded-xl border border-dashed border-slate-500/40 bg-slate-900/40 px-6 py-4 text-center text-sm text-slate-400">
-                    Share the code so players can join.
-                  </li>
-                ) : (
-                  players.map((player) => (
-                    <li
-                      key={player.id}
-                      className={`flex items-center justify-between rounded-xl px-5 py-4 text-sm text-slate-100 transition ${
-                        currentTurn?.playerId === player.id
-                          ? 'bg-cyan-500/20 border border-cyan-400/30'
-                          : 'bg-slate-800/60'
-                      }`}
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">{player.name}</span>
-                        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                          {currentTurn?.playerId === player.id ? 'Selecting now' : 'Waiting'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-semibold text-slate-100">{player.score} pts</span>
-                        <button
-                          type="button"
-                          onClick={() => setTurnMutation.mutate(player.id)}
-                          disabled={setTurnMutation.isPending || currentTurn?.playerId === player.id}
-                          className="inline-flex items-center justify-center rounded-full border border-slate-500/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200 transition hover:border-slate-300/60 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          Make turn
-                        </button>
-                      </div>
-                    </li>
-                  ))
-                )}
-              </ul>
-            </section>
-
-            <section className="rounded-2xl bg-slate-900/70 p-6">
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-xl font-semibold text-slate-100">Active question</h3>
-                {activeQuestion ? (
-                  <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    {activeQuestion.category} • {activeQuestion.points} pts
-                  </span>
-                ) : null}
-              </div>
-              {activeQuestion ? (
-                <div className="mt-4 space-y-3 rounded-xl border border-slate-500/30 bg-slate-900/80 px-6 py-5">
-                  <h4 className="text-lg font-semibold text-slate-100">{activeQuestion.title}</h4>
-                  <p className="text-sm text-slate-300">{activeQuestion.prompt}</p>
-                  <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.2em] text-slate-400">
-                    <span>Assigned to {activeQuestion.assignedTo?.name ?? '—'}</span>
-                    <span>
-                      Answering {activeQuestion.answeringPlayer?.name ?? (activeQuestion.stage === 'openForBuzz' ? 'Waiting for buzz' : '—')}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <p className="mt-4 rounded-xl border border-dashed border-slate-500/40 bg-slate-900/40 px-6 py-5 text-sm text-slate-400">
-                  Select a question when the player is ready.
-                </p>
-              )}
-            </section>
-
-            {lastResult ? (
-              <section className="rounded-2xl bg-slate-900/70 p-6">
-                <div className="flex items-baseline justify-between">
-                  <h3 className="text-xl font-semibold text-slate-100">Last result</h3>
-                  <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    {lastResult.category} • {lastResult.points} pts
-                  </span>
-                </div>
-                <div className="mt-4 space-y-3 rounded-xl border border-slate-500/30 bg-slate-900/80 px-6 py-5">
-                  <h4 className="text-lg font-semibold text-slate-100">{lastResult.title}</h4>
-                  <p className="text-sm text-slate-300">
-                    {lastResult.answeredCorrectly ? 'Answered correctly' : 'Answered incorrectly'} by{' '}
-                    {lastResult.answeredBy?.name ?? 'unknown player'}. Awarded {lastResult.pointsAwarded} pts.
-                  </p>
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Correct answer: {lastResult.correctAnswer}
-                  </p>
-                </div>
-              </section>
-            ) : null}
-
-            <section className="rounded-2xl bg-slate-900/70 p-6">
-              <h3 className="text-xl font-semibold text-slate-100">Trivia categories</h3>
-              <p className="mt-2 text-sm text-slate-300">
-                Choose a category and difficulty to queue the next clue. You can always leave them set to "Any" for a random pick.
-              </p>
-              <div className="mt-4 grid gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                <span>Category: {categoryOptions.find((opt) => opt.value === selectedCategory)?.label ?? 'Any'}</span>
-                <span>Difficulty: {selectedDifficulty || 'Any'}</span>
-              </div>
-            </section>
-          </div>
-        )}
-
         {(actionError || lastError) && (
           <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
             {actionError ?? lastError}
           </p>
+        )}
+
+
+        {!session ? (
+          <div className="mt-8 grid place-items-center gap-4 rounded-2xl border border-dashed border-slate-500/40 bg-slate-900/60 p-12 text-center">
+            <p className="text-lg text-slate-200">Host access required</p>
+            <p className="max-w-md text-sm text-slate-400">
+              Use the host link you received after creating the game. You can start a new session from the home page if needed.
+            </p>
+            <button
+              type="button"
+              onClick={handleExit}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-500/40 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60"
+            >
+              Return home
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr),340px]">
+            <div className="flex flex-col gap-6">
+              <HostRoomSummary
+                code={session.code}
+                statusClassName={statusStyles[status]}
+                statusLabel={status}
+                inviteLink={inviteLink}
+                boardLink={boardLink}
+              />
+
+              <HostTurnControls
+                currentTurnLabel={currentTurn?.name ?? '—'}
+                statusMessage={activeQuestionStatus}
+                onCancelQuestion={() => cancelQuestionMutation.mutate()}
+                cancelDisabled={cancelQuestionMutation.isPending || !activeQuestion}
+                categoryOptions={categoryOptions}
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+                availableDifficulties={availableDifficulties}
+                selectedDifficulty={selectedDifficulty}
+                onSelectDifficulty={setSelectedDifficulty}
+                onActivate={() => {
+                  if (!selectedCategory || !selectedDifficulty) {
+                    return;
+                  }
+                  void activateQuestionMutation.mutateAsync({
+                    category: selectedCategory,
+                    difficulty: selectedDifficulty as 'easy' | 'medium' | 'hard',
+                  });
+                }}
+                canActivate={canActivateQuestion}
+                onOpenBuzzers={() => openBuzzersMutation.mutate()}
+                canOpenBuzzers={canOpenBuzzers}
+                onMarkIncorrect={() => markIncorrectMutation.mutate(false)}
+                onPassToBuzzers={() => markIncorrectMutation.mutate(true)}
+                canMarkIncorrect={canCloseIncorrect}
+                onMarkCorrect={() =>
+                  markCorrectMutation.mutate(activeQuestion?.answeringPlayer?.playerId)
+                }
+                canMarkCorrect={canMarkCorrect}
+              />
+
+              <HostActiveQuestionCard activeQuestion={activeQuestion} />
+
+              <HostLastResultCard lastResult={lastResult} />
+
+              <HostAvailableSlotsCard
+                categoryCount={categoryOptions.length}
+                selectedCategoryLabel={
+                  categoryOptions.find((option) => option.value === selectedCategory)?.label ?? '—'
+                }
+                selectedDifficultyLabel={
+                  selectedDifficulty ? formatCategoryLabel(selectedDifficulty) : '—'
+                }
+              />
+            </div>
+
+            <HostPlayersList
+              players={players}
+              currentTurn={currentTurn}
+              onMakeTurn={(playerId) => setTurnMutation.mutate(playerId)}
+              disableInteractions={setTurnMutation.isPending}
+            />
+          </div>
         )}
       </div>
     </div>
