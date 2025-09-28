@@ -14,6 +14,7 @@ import { PlayerConsole } from './components/PlayerConsole';
 import { QuestionLibrary } from './components/QuestionLibrary';
 import { HostSecretError } from './components/HostSecretError';
 import { createSession, listRooms, type RoomOverview } from './api';
+import { getHostSecret } from './utils/hostSessionStorage';
 import { usePlayerSession } from './hooks/usePlayerSession';
 import { savePlayerSession } from './utils/playerSessionStorage';
 
@@ -106,6 +107,21 @@ function Landing() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
+                    {(() => {
+                      const hostSecret = getHostSecret(room.code);
+                      if (!hostSecret) {
+                        return null;
+                      }
+
+                      return (
+                        <a
+                          href={`/${room.code}/questions?hostSecret=${hostSecret}`}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-500/40 px-5 py-2 text-sm font-semibold text-slate-100 transition hover:border-cyan-300/60 hover:bg-cyan-400/10"
+                        >
+                          Open board
+                        </a>
+                      );
+                    })()}
                     <button
                       type="button"
                       className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:from-cyan-300 hover:to-indigo-400 focus:outline-none focus:ring-2 focus:ring-cyan-300"

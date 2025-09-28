@@ -378,6 +378,36 @@ export class GameStore {
     return this.buildSnapshot(room);
   }
 
+  destroyRoom(code: string, hostSecret: string) {
+    const room = this.verifyHost(code, hostSecret);
+    const connections = Array.from(room.connections);
+
+    this.rooms.delete(room.code);
+
+    for (const connection of connections) {
+      try {
+        if (connection.socket.readyState === WebSocket.OPEN) {
+          connection.socket.send(
+            JSON.stringify({
+              type: 'error',
+              message: 'Session closed by host',
+            }),
+          );
+        }
+      } catch {
+        // ignore notification failures
+      }
+
+      try {
+        connection.socket.close();
+      } catch {
+        // ignore close failures
+      }
+    }
+
+    this.log.info({ code: room.code }, 'Room destroyed by host');
+  }
+
   removePlayer(code: string, playerId: string) {
     const room = this.ensureRoom(code);
     const player = this.getPlayer(room, playerId);

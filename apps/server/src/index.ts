@@ -176,6 +176,37 @@ fastify.post("/api/session/:code/leave", async (request, reply) => {
   }
 });
 
+fastify.post("/api/session/:code/destroy", async (request, reply) => {
+  const { code } = request.params as { code: string };
+  const body = HostAuthSchema.safeParse(request.body);
+
+  if (!body.success) {
+    reply.code(400);
+    return { message: "Invalid payload" };
+  }
+
+  try {
+    store.destroyRoom(code, body.data.hostSecret);
+    reply.code(204);
+    return null;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message === "Room not found") {
+      reply.code(404);
+      return { message: "Session not found" };
+    }
+
+    if (message === "Forbidden") {
+      reply.code(403);
+      return { message: "Invalid host secret" };
+    }
+
+    fastify.log.warn(error, "Failed to destroy session");
+    reply.code(500);
+    return { message: "Unable to destroy session" };
+  }
+});
+
 fastify.post("/api/session/:code/turn", async (request, reply) => {
   const { code } = request.params as { code: string };
   const body = SetTurnBodySchema.safeParse(request.body);

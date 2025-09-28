@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
@@ -24,6 +24,7 @@ export function PlayerConsole({ session, onExit }: PlayerConsoleProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isConfirmingLeave, setIsConfirmingLeave] = useState(false);
+  const hasHandledForcedExitRef = useRef(false);
 
   const registerPayload = useMemo(
     () => ({
@@ -91,32 +92,65 @@ export function PlayerConsole({ session, onExit }: PlayerConsoleProps) {
     return 'Waiting for the game to begin.';
   }, [activeQuestion, canBuzz, hasAttempted, isAnswering, state?.currentTurn, session.playerId]);
 
-  const executeLeave = () => {
-    void leaveSession(session.code, session.playerId).catch(() => {
-      // best effort; leaving should not block the client cleanup
-    });
+  const executeLeave = useCallback(
+    (options?: { notifyServer?: boolean; redirect?: boolean }) => {
+      const shouldNotifyServer = options?.notifyServer ?? true;
+      const shouldRedirect = options?.redirect ?? true;
 
-    clearPlayerSession(session.code, session.playerId);
-    queryClient.removeQueries({
-      queryKey: ['player-session', session.code.toUpperCase(), session.playerId],
-      exact: true,
-    });
+      setIsConfirmingLeave(false);
 
-    if (onExit) {
-      onExit();
-    }
+      if (shouldNotifyServer) {
+        void leaveSession(session.code, session.playerId).catch(() => {
+          // best effort; leaving should not block the client cleanup
+        });
+      }
 
-    navigate('/', { replace: true });
-  };
+      clearPlayerSession(session.code, session.playerId);
+      queryClient.removeQueries({
+        queryKey: ['player-session', session.code.toUpperCase(), session.playerId],
+        exact: true,
+      });
+
+      if (onExit) {
+        onExit();
+      }
+
+      if (shouldRedirect) {
+        navigate('/', { replace: true });
+      }
+    },
+    [navigate, onExit, queryClient, session.code, session.playerId],
+  );
 
   const handleConfirmLeave = () => {
-    setIsConfirmingLeave(false);
     executeLeave();
   };
 
   const handleCancelLeave = () => {
     setIsConfirmingLeave(false);
   };
+
+  useEffect(() => {
+    if (hasHandledForcedExitRef.current) {
+      return;
+    }
+
+    if (lastError?.toLowerCase().includes('session closed by host')) {
+      hasHandledForcedExitRef.current = true;
+      executeLeave({ notifyServer: false });
+    }
+  }, [executeLeave, lastError]);
+
+  useEffect(() => {
+    if (hasHandledForcedExitRef.current) {
+      return;
+    }
+
+    if (status === 'closed' && !state) {
+      hasHandledForcedExitRef.current = true;
+      executeLeave({ notifyServer: false });
+    }
+  }, [executeLeave, state, status]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-black px-6 py-16 text-slate-100">

@@ -19,7 +19,20 @@ async function request<T>(
     throw new Error(response.statusText);
   }
 
-  return response.json();
+  if (response.status === 204 || response.status === 205) {
+    return undefined as T;
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return undefined as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return text as unknown as T;
+  }
 }
 
 export async function createSession() {
@@ -103,10 +116,18 @@ export async function cancelActiveQuestion(code: string, hostSecret: string) {
 }
 
 export async function leaveSession(code: string, playerId: string) {
-  return request<null>(`/api/session/${code}/leave`, {
+  return request<void>(`/api/session/${code}/leave`, {
     method: "POST",
     headers: JSON_HEADERS,
     body: JSON.stringify({ playerId }),
+  });
+}
+
+export async function destroySession(code: string, hostSecret: string) {
+  return request<void>(`/api/session/${code}/destroy`, {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ hostSecret }),
   });
 }
 

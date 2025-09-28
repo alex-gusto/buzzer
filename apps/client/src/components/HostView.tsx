@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   activateQuestion,
   cancelActiveQuestion,
+  destroySession,
   markQuestionResult,
   openQuestionForBuzzers,
   setTurn,
@@ -21,6 +22,7 @@ import {
   HostRoomSummary,
   HostTurnControls,
 } from "./host";
+import { clearHostSecret, saveHostSecret } from "../utils/hostSessionStorage";
 
 type HostSession = {
   code: string;
@@ -71,6 +73,7 @@ export function HostView({ onExit }: HostViewProps) {
     code && hostSecretParam ? { code, hostSecret: hostSecretParam } : null
   );
   const [actionError, setActionError] = useState<string | null>(null);
+  const [showDestroyConfirm, setShowDestroyConfirm] = useState(false);
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
   useEffect(() => {
@@ -81,6 +84,12 @@ export function HostView({ onExit }: HostViewProps) {
 
     setSession(null);
   }, [code, hostSecretParam]);
+
+  useEffect(() => {
+    if (session) {
+      saveHostSecret(session.code, session.hostSecret);
+    }
+  }, [session]);
 
   const handleExit = () => {
     if (onExit) {
@@ -320,13 +329,32 @@ export function HostView({ onExit }: HostViewProps) {
     },
   });
 
+  const destroySessionMutation = useMutation<void, Error, HostSession>({
+    mutationFn: async (payload) => destroySession(payload.code, payload.hostSecret),
+    onSuccess: (_, payload) => {
+      clearHostSecret(payload.code);
+      setShowDestroyConfirm(false);
+      setActionError(null);
+      if (onExit) {
+        onExit();
+      }
+      navigate('/', { replace: true });
+    },
+    onError: (error) => {
+      setActionError(
+        error instanceof Error ? error.message : "Unable to end the game"
+      );
+    },
+  });
+
   const anyMutationPending =
     setTurnMutation.isPending ||
     activateQuestionMutation.isPending ||
     openBuzzersMutation.isPending ||
     markCorrectMutation.isPending ||
     markIncorrectMutation.isPending ||
-    cancelQuestionMutation.isPending;
+    cancelQuestionMutation.isPending ||
+    destroySessionMutation.isPending;
 
   const activeQuestionStatus = useMemo(() => {
     if (!activeQuestion) {
@@ -473,6 +501,26 @@ export function HostView({ onExit }: HostViewProps) {
                   selectedDifficulty ? formatCategoryLabel(selectedDifficulty) : '—'
                 }
               />
+
+              <section className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-5 text-sm text-rose-100">
+                <header className="flex flex-col gap-1 text-rose-200">
+                  <span className="text-xs uppercase tracking-[0.3em]">Danger zone</span>
+                  <h2 className="text-xl font-semibold text-rose-100">End this game</h2>
+                </header>
+                <p className="mt-3 text-rose-100/80">
+                  Closing the room disconnects every player and clears the board. This cannot be undone.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowDestroyConfirm(true)}
+                    disabled={destroySessionMutation.isPending || !session}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:from-rose-400 hover:to-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {destroySessionMutation.isPending ? 'Ending game...' : 'End game for everyone'}
+                  </button>
+                </div>
+              </section>
             </div>
 
             <HostPlayersList
@@ -484,6 +532,34 @@ export function HostView({ onExit }: HostViewProps) {
           </div>
         )}
       </div>
+
+      {showDestroyConfirm && session ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 px-4 py-10 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-3xl border border-slate-500/40 bg-slate-950/95 p-6 shadow-xl">
+            <h2 className="text-2xl font-semibold text-slate-100">End game for everyone?</h2>
+            <p className="mt-3 text-sm text-slate-300">
+              All players will be disconnected and the room will be removed. You will need to create a new room to play again.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDestroyConfirm(false)}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-500/40 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60"
+              >
+                Keep room open
+              </button>
+              <button
+                type="button"
+                onClick={() => session && destroySessionMutation.mutate(session)}
+                disabled={destroySessionMutation.isPending}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:from-rose-400 hover:to-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {destroySessionMutation.isPending ? 'Ending...' : 'Yes, end game'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
