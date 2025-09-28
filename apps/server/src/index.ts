@@ -58,6 +58,10 @@ const MarkAnswerBodySchema = HostAuthSchema.extend({
   openBuzzers: z.boolean().optional(),
 });
 
+const LeaveRoomBodySchema = z.object({
+  playerId: z.string().trim().min(1),
+});
+
 function handleHostError(error: unknown, reply: FastifyReply, log: typeof fastify.log) {
   const message = error instanceof Error ? error.message : String(error);
 
@@ -105,6 +109,10 @@ fastify.post("/api/session", async (_, reply) => {
   return { code: room.code, hostSecret: room.hostSecret };
 });
 
+fastify.get("/api/rooms", async () => {
+  return store.listRooms();
+});
+
 fastify.get("/api/session/:code", async (request, reply) => {
   const { code } = request.params as { code: string };
 
@@ -134,6 +142,37 @@ fastify.post("/api/session/:code/join", async (request, reply) => {
     fastify.log.warn(error, "Failed to join session");
     reply.code(404);
     return { message: "Session not found" };
+  }
+});
+
+fastify.post("/api/session/:code/leave", async (request, reply) => {
+  const { code } = request.params as { code: string };
+  const body = LeaveRoomBodySchema.safeParse(request.body);
+
+  if (!body.success) {
+    reply.code(400);
+    return { message: "Invalid payload" };
+  }
+
+  try {
+    store.removePlayer(code, body.data.playerId);
+    reply.code(204);
+    return null;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message === "Room not found") {
+      reply.code(404);
+      return { message: "Session not found" };
+    }
+
+    if (message === "Player not found") {
+      reply.code(404);
+      return { message: "Player not found" };
+    }
+
+    fastify.log.warn(error, "Failed to remove player from session");
+    reply.code(500);
+    return { message: "Unable to leave session" };
   }
 });
 

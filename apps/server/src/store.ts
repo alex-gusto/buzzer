@@ -378,6 +378,111 @@ export class GameStore {
     return this.buildSnapshot(room);
   }
 
+  removePlayer(code: string, playerId: string) {
+    const room = this.ensureRoom(code);
+    const player = this.getPlayer(room, playerId);
+
+    room.players.delete(playerId);
+
+    const orderIndex = room.turnOrder.indexOf(playerId);
+    if (orderIndex !== -1) {
+      room.turnOrder.splice(orderIndex, 1);
+      if (room.turnOrder.length === 0) {
+        room.currentTurnIndex = null;
+      } else if (room.currentTurnIndex !== null) {
+        if (room.currentTurnIndex > orderIndex) {
+          room.currentTurnIndex -= 1;
+        }
+        if (room.currentTurnIndex >= room.turnOrder.length) {
+          room.currentTurnIndex = 0;
+        }
+      }
+    }
+
+    if (room.currentTurnId === playerId) {
+      room.currentTurnId = null;
+    }
+
+    if (room.activeQuestion) {
+      room.activeQuestion.attemptedPlayerIds.delete(playerId);
+      if (room.activeQuestion.assignedTo === playerId) {
+        room.activeQuestion.assignedTo = null;
+      }
+      if (room.activeQuestion.answeringPlayerId === playerId) {
+        room.activeQuestion.answeringPlayerId = null;
+        if (room.activeQuestion.stage === 'awaitingHostDecision') {
+          room.questionActive = false;
+          room.buzzedBy = undefined;
+        }
+      }
+    }
+
+    if (room.buzzedBy === playerId) {
+      room.buzzedBy = undefined;
+      room.questionActive = false;
+    }
+
+    if (room.lastResult) {
+      if (room.lastResult.answeredBy === playerId) {
+        room.lastResult.answeredBy = undefined;
+      }
+      if (room.lastResult.assignedTo === playerId) {
+        room.lastResult.assignedTo = undefined;
+      }
+    }
+
+    const staleConnections: RoomConnection[] = [];
+    for (const connection of room.connections) {
+      if (connection.playerId === playerId) {
+        staleConnections.push(connection);
+      }
+    }
+    staleConnections.forEach((connection) => {
+      room.connections.delete(connection);
+      try {
+        connection.socket.close();
+      } catch {
+        // Ignore socket close errors
+      }
+    });
+
+    if (room.players.size === 0 && room.connections.size === 0) {
+      this.rooms.delete(room.code);
+      this.log.info({ code: room.code }, 'Removed room after last player left');
+      return;
+    }
+
+    this.broadcastState(room);
+    this.log.info({ code: room.code, playerId: player.id }, 'Player left room');
+  }
+
+  listRooms() {
+    const summaries: Array<{
+      code: string;
+      createdAt: number;
+      playerCount: number;
+      questionActive: boolean;
+      hostOnline: boolean;
+    }> = [];
+
+    for (const room of this.rooms.values()) {
+      const hostOnline = Array.from(room.connections).some(
+        (connection) => connection.role === 'host',
+      );
+
+      summaries.push({
+        code: room.code,
+        createdAt: room.createdAt,
+        playerCount: room.players.size,
+        questionActive: Boolean(room.activeQuestion),
+        hostOnline,
+      });
+    }
+
+    summaries.sort((a, b) => b.createdAt - a.createdAt);
+    return summaries;
+  }
+
   broadcastState(room: GameRoom) {
     const staleConnections: RoomConnection[] = [];
 

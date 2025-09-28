@@ -33,6 +33,18 @@ export async function getSessionSnapshot(code: string) {
   return request<RoomSnapshot>(`/api/session/${code}`);
 }
 
+export type RoomOverview = {
+  code: string;
+  createdAt: number;
+  playerCount: number;
+  questionActive: boolean;
+  hostOnline: boolean;
+};
+
+export async function listRooms() {
+  return request<RoomOverview[]>("/api/rooms");
+}
+
 export async function joinSession(code: string, name: string) {
   return request<{ playerId: string }>(`/api/session/${code}/join`, {
     method: "POST",
@@ -87,6 +99,14 @@ export async function cancelActiveQuestion(code: string, hostSecret: string) {
     method: "POST",
     headers: JSON_HEADERS,
     body: JSON.stringify({ hostSecret }),
+  });
+}
+
+export async function leaveSession(code: string, playerId: string) {
+  return request<null>(`/api/session/${code}/leave`, {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ playerId }),
   });
 }
 

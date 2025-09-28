@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
+import { leaveSession } from '../api';
 import { useSessionConnection } from '../hooks/useSessionConnection';
 import type { RoomSnapshot, SocketStatus } from '../types';
+import { clearPlayerSession } from '../utils/playerSessionStorage';
 import type { PlayerSession } from '../utils/playerSessionStorage';
 
 const statusStyles: Record<SocketStatus, string> = {
@@ -21,6 +23,7 @@ type PlayerConsoleProps = {
 export function PlayerConsole({ session, onExit }: PlayerConsoleProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [isConfirmingLeave, setIsConfirmingLeave] = useState(false);
 
   const registerPayload = useMemo(
     () => ({
@@ -88,7 +91,12 @@ export function PlayerConsole({ session, onExit }: PlayerConsoleProps) {
     return 'Waiting for the game to begin.';
   }, [activeQuestion, canBuzz, hasAttempted, isAnswering, state?.currentTurn, session.playerId]);
 
-  const handleExit = () => {
+  const executeLeave = () => {
+    void leaveSession(session.code, session.playerId).catch(() => {
+      // best effort; leaving should not block the client cleanup
+    });
+
+    clearPlayerSession(session.code, session.playerId);
     queryClient.removeQueries({
       queryKey: ['player-session', session.code.toUpperCase(), session.playerId],
       exact: true,
@@ -96,10 +104,18 @@ export function PlayerConsole({ session, onExit }: PlayerConsoleProps) {
 
     if (onExit) {
       onExit();
-      return;
     }
 
-    navigate(`/${session.code}`);
+    navigate('/', { replace: true });
+  };
+
+  const handleConfirmLeave = () => {
+    setIsConfirmingLeave(false);
+    executeLeave();
+  };
+
+  const handleCancelLeave = () => {
+    setIsConfirmingLeave(false);
   };
 
   return (
@@ -108,7 +124,7 @@ export function PlayerConsole({ session, onExit }: PlayerConsoleProps) {
         <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <button
             type="button"
-            onClick={handleExit}
+            onClick={() => setIsConfirmingLeave(true)}
             className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-500/40 px-4 py-2 text-sm text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60"
           >
             <span aria-hidden>←</span>
@@ -207,6 +223,32 @@ export function PlayerConsole({ session, onExit }: PlayerConsoleProps) {
           </p>
         )}
       </div>
+      {isConfirmingLeave ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 px-4 py-10 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-slate-500/40 bg-slate-950/95 p-6 shadow-xl">
+            <h2 className="text-2xl font-semibold text-slate-100">Leave this game?</h2>
+            <p className="mt-3 text-sm text-slate-300">
+              You'll disappear from the scoreboard right away. You can rejoin later with the room code if you change your mind.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleCancelLeave}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-500/40 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60"
+              >
+                Stay in game
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmLeave}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:from-rose-400 hover:to-amber-400"
+              >
+                Leave game
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Navigate,
   Route,
@@ -13,12 +13,9 @@ import { JoinForm } from './components/JoinForm';
 import { PlayerConsole } from './components/PlayerConsole';
 import { QuestionLibrary } from './components/QuestionLibrary';
 import { HostSecretError } from './components/HostSecretError';
-import { createSession } from './api';
+import { createSession, listRooms, type RoomOverview } from './api';
 import { usePlayerSession } from './hooks/usePlayerSession';
-import {
-  clearPlayerSession,
-  savePlayerSession,
-} from './utils/playerSessionStorage';
+import { savePlayerSession } from './utils/playerSessionStorage';
 
 function Landing() {
   const navigate = useNavigate();
@@ -28,6 +25,15 @@ function Landing() {
       navigate(`/${session.code}?hostSecret=${session.hostSecret}`);
     },
   });
+
+  const roomsQuery = useQuery({
+    queryKey: ['rooms'],
+    queryFn: listRooms,
+    refetchInterval: 5000,
+    staleTime: 5000,
+  });
+
+  const rooms: RoomOverview[] = roomsQuery.data ?? [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900/80 via-slate-900/95 to-slate-950 pb-16 pt-24 text-slate-100">
@@ -45,7 +51,7 @@ function Landing() {
             className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-6 py-4 text-lg font-semibold text-slate-950 transition hover:from-cyan-300 hover:to-indigo-400 focus:outline-none focus:ring-2 focus:ring-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={createSessionMutation.isPending}
           >
-            {createSessionMutation.isPending ? 'Creating…' : 'Create a game'}
+            {createSessionMutation.isPending ? 'Creating...' : 'Create a game'}
           </button>
           {createSessionMutation.isError ? (
             <p className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-center text-sm text-rose-200">
@@ -54,6 +60,66 @@ function Landing() {
           ) : null}
         </div>
       </div>
+      <section className="mx-auto flex w-full max-w-5xl flex-col gap-4 rounded-[28px] border border-slate-500/30 bg-slate-950/70 px-6 py-8 text-slate-100 backdrop-blur">
+        <header className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Available rooms</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Pick a room below to join instantly or create a new one above.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60"
+            onClick={() => roomsQuery.refetch()}
+            disabled={roomsQuery.isFetching}
+          >
+            {roomsQuery.isFetching ? 'Refreshing...' : 'Refresh' }
+          </button>
+        </header>
+        <div className="rounded-2xl border border-slate-500/30 bg-slate-950/70">
+          {roomsQuery.isLoading ? (
+            <p className="px-6 py-10 text-sm text-slate-300">Loading rooms...</p>
+          ) : roomsQuery.isError ? (
+            <p className="px-6 py-10 text-sm text-rose-200">
+              Unable to load rooms right now. Try refreshing shortly.
+            </p>
+          ) : rooms.length === 0 ? (
+            <p className="px-6 py-10 text-sm text-slate-300">
+              No open rooms at the moment. Create one above to get started and invite players.
+            </p>
+          ) : (
+            <ul className="divide-y divide-slate-500/20">
+              {rooms.map((room) => (
+                <li key={room.code} className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
+                  <div className="flex flex-col">
+                    <span className="text-xs uppercase tracking-[0.25em] text-slate-400">Room code</span>
+                    <span className="text-3xl font-semibold tracking-[0.3em] text-slate-100">{room.code}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-6 text-sm text-slate-300">
+                    <span>{room.playerCount} {room.playerCount === 1 ? 'player' : 'players'}</span>
+                    <span className={room.hostOnline ? 'text-emerald-200' : 'text-slate-500'}>
+                      {room.hostOnline ? 'Host online' : 'Host offline'}
+                    </span>
+                    <span className={room.questionActive ? 'text-amber-200' : 'text-slate-500'}>
+                      {room.questionActive ? 'Question in progress' : 'Waiting for next question'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:from-cyan-300 hover:to-indigo-400 focus:outline-none focus:ring-2 focus:ring-cyan-300"
+                      onClick={() => navigate(`/${room.code}`)}
+                    >
+                      Join room
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
@@ -104,7 +170,7 @@ function PlayerRoute() {
   }
 
   if (!session && !isPending) {
-    return <Navigate to={`/${code}`} replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (!session) {
@@ -115,9 +181,7 @@ function PlayerRoute() {
     <PlayerConsole
       session={session}
       onExit={() => {
-        clearPlayerSession(code, session.playerId);
-        queryClient.removeQueries({ queryKey: ['player-session', code, session.playerId], exact: true });
-        navigate(`/${code}`);
+        navigate('/', { replace: true });
       }}
     />
   );
