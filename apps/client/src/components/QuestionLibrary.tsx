@@ -148,7 +148,7 @@ export function QuestionLibrary() {
     if (categories.length === 0) {
       return "1fr";
     }
-    return `180px repeat(${categories.length}, minmax(160px, 1fr))`;
+    return `repeat(${categories.length}, minmax(60px, 1fr))`;
   }, [categories.length]);
 
   const isInitializing = !state && !lastError;
@@ -204,64 +204,53 @@ export function QuestionLibrary() {
             </section>
           ) : (
             <section className="flex flex-1 flex-col gap-6 px-6 pb-10">
-              <div className="flex-1 overflow-auto rounded-[32px] border border-slate-500/30 bg-slate-900/75">
-                <div
-                  className="grid min-w-full"
-                  style={{ gridTemplateColumns: columnTemplate }}
-                >
-                  <div className="sticky top-0 z-10 flex items-center justify-center border-b border-r border-slate-500/30 bg-slate-900/95 px-4 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                    Difficulty
+              <div
+                className="grid min-w-full rounded-xl overflow-hidden border-slate-500/30 border"
+                style={{ gridTemplateColumns: columnTemplate }}
+              >
+                {categories.map((category) => (
+                  <div
+                    key={`header-${category.value}`}
+                    className="flex flex-col justify-center items-center gap-1 border-b border-r border-slate-500/30 bg-slate-900/95 px-4 py-4 text-center"
+                  >
+                    <span className="text-sm font-semibold text-slate-100">
+                      {category.label}
+                    </span>
                   </div>
-                  {categories.map((category) => (
-                    <div
-                      key={`header-${category.value}`}
-                      className="flex flex-col gap-1 border-b border-r border-slate-500/30 bg-slate-900/95 px-4 py-4 text-center"
-                    >
-                      <span className="text-sm font-semibold text-slate-100">
-                        {category.label}
-                      </span>
-                      <span className="text-[10px] uppercase tracking-[0.35em] text-slate-500">
-                        {category.subcategories.length} topics
-                      </span>
-                    </div>
-                  ))}
+                ))}
 
-                  {DIFFICULTIES.map((difficulty) => (
-                    <Fragment key={difficulty}>
-                      <div className="flex flex-col items-center justify-center border-b border-r border-slate-500/30 bg-slate-900/90 px-4 py-6 text-sm font-semibold uppercase tracking-[0.35em] text-slate-200">
-                        {formatLabel(difficulty)}
-                      </div>
-                      {categories.map((category) => {
-                        const slotKey =
-                          `${category.value}|${difficulty}`.toLowerCase();
-                        const used = usedSlots.has(slotKey);
-                        const isActive = activeSlotKey === slotKey;
-                        const points = pointsForDifficulty(difficulty);
+                {DIFFICULTIES.map((difficulty) => (
+                  <Fragment key={difficulty}>
+                    {categories.map((category) => {
+                      const slotKey =
+                        `${category.value}|${difficulty}`.toLowerCase();
+                      const used = usedSlots.has(slotKey);
+                      const isActive = activeSlotKey === slotKey;
+                      const points = pointsForDifficulty(difficulty);
 
-                        return (
-                          <div
-                            key={slotKey}
-                            className={`flex min-h-[160px] items-center justify-center border-b border-r border-slate-500/30 transition ${
-                              isActive
-                                ? "border-cyan-400/60 bg-cyan-400/10"
-                                : used
-                                ? "bg-slate-900/30"
-                                : "bg-slate-900/70"
+                      return (
+                        <div
+                          key={slotKey}
+                          className={`flex min-h-[160px] items-center justify-center border-b border-r border-slate-500/30 transition ${
+                            isActive
+                              ? "border-cyan-400/60 bg-cyan-400/10"
+                              : used
+                              ? "bg-slate-900/10"
+                              : "bg-slate-900/70"
+                          }`}
+                        >
+                          <span
+                            className={`text-4xl font-semibold tracking-tight md:text-5xl ${
+                              used ? "text-slate-800" : "text-slate-100"
                             }`}
                           >
-                            <span
-                              className={`text-4xl font-semibold tracking-tight md:text-5xl ${
-                                used ? "text-slate-500" : "text-slate-100"
-                              }`}
-                            >
-                              {points}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </Fragment>
-                  ))}
-                </div>
+                            {points}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </Fragment>
+                ))}
               </div>
               <p className="text-center text-xs uppercase tracking-[0.3em] text-slate-500">
                 Slots gray out after activation. Reusing the same category and
