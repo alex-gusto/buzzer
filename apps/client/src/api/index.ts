@@ -57,7 +57,7 @@ export type RoomOverview = {
 };
 
 export async function listRooms() {
-  return request<RoomOverview[]>("/api/rooms");
+  return request<RoomOverview[]>(`/api/rooms?v=${new Date().getTime()}`);
 }
 
 export async function joinSession(code: string, name: string) {

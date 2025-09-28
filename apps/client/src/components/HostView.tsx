@@ -511,21 +511,6 @@ export function HostView({ onExit }: HostViewProps) {
                 }
               />
 
-              <section className="rounded-2xl bg-slate-900/70 px-6 py-5 text-sm text-slate-100">
-                <header className="flex flex-col gap-1">
-                  <span className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                    Share board access
-                  </span>
-                  <h2 className="text-xl font-semibold text-slate-100">
-                    Broadcast a 4-digit code
-                  </h2>
-                </header>
-                <p className="mt-3 text-slate-300">
-                  Viewers can open the questions board from the home page by
-                  entering the code you share.
-                </p>
-              </section>
-
               <section className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-5 text-sm text-rose-100">
                 <header className="flex flex-col gap-1 text-rose-200">
                   <span className="text-xs uppercase tracking-[0.3em]">

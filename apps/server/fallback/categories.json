@@ -1,7 +1,0 @@
-{
-  "general_knowledge": ["food_and_drink", "film_and_tv", "music"],
-  "science": ["biology", "chemistry", "physics"],
-  "history": ["ancient_history", "modern_history"],
-  "geography": ["world", "europe", "asia"],
-  "sport_and_leisure": ["soccer", "basketball", "olympics"]
-}

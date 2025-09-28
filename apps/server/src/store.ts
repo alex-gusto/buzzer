@@ -1,12 +1,17 @@
-import WebSocket from 'ws';
-import { customAlphabet, nanoid } from 'nanoid';
-import type { FastifyBaseLogger } from 'fastify';
+import WebSocket from "ws";
+import { customAlphabet, nanoid } from "nanoid";
+import type { FastifyBaseLogger } from "fastify";
 
-import type { GameRoom, Player, RoomConnection, RoomSnapshot } from './types.js';
-import { RoomRegistry } from './roomRegistry.js';
-import { fetchTriviaCategories, fetchTriviaQuestion } from './triviaApi.js';
+import type {
+  GameRoom,
+  Player,
+  RoomConnection,
+  RoomSnapshot,
+} from "./types.js";
+import { RoomRegistry } from "./roomRegistry.js";
+import { fetchTriviaCategories, fetchTriviaQuestion } from "./triviaApi.js";
 
-const roomCodeAlphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const roomCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const generateRoomCode = customAlphabet(roomCodeAlphabet, 4);
 
 const DIFFICULTY_POINTS: Record<string, number> = {
@@ -18,7 +23,7 @@ const DIFFICULTY_POINTS: Record<string, number> = {
 const SHARE_CODE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function pointsForDifficulty(difficulty: string | undefined) {
-  return DIFFICULTY_POINTS[difficulty ?? 'medium'] ?? 200;
+  return DIFFICULTY_POINTS[difficulty ?? "medium"] ?? 200;
 }
 
 function shuffleArray<T>(values: T[]): T[] {
@@ -43,7 +48,7 @@ export class GameStore {
   }
 
   async createRoom() {
-    let code = '';
+    let code = "";
     do {
       code = generateRoomCode();
     } while (this.rooms.has(code));
@@ -66,12 +71,15 @@ export class GameStore {
     try {
       room.categories = await fetchTriviaCategories();
     } catch (error) {
-      this.log.warn({ code, err: error }, 'Failed to preload trivia categories');
+      this.log.warn(
+        { code, err: error },
+        "Failed to preload trivia categories"
+      );
       room.categories = null;
     }
 
     this.rooms.set(room);
-    this.log.info({ code }, 'Created new room');
+    this.log.info({ code }, "Created new room");
     return room;
   }
 
@@ -82,7 +90,7 @@ export class GameStore {
   verifyHost(code: string, hostSecret: string) {
     const room = this.ensureRoom(code);
     if (room.hostSecret !== hostSecret) {
-      throw new Error('Forbidden');
+      throw new Error("Forbidden");
     }
 
     return room;
@@ -107,7 +115,10 @@ export class GameStore {
     }
 
     this.broadcastState(room);
-    this.log.info({ code: room.code, playerId: player.id, name: player.name }, 'Player joined room');
+    this.log.info(
+      { code: room.code, playerId: player.id, name: player.name },
+      "Player joined room"
+    );
     return { room, player };
   }
 
@@ -115,10 +126,10 @@ export class GameStore {
     const room = this.ensureRoom(code);
     const player = room.players.get(playerId);
     if (!player) {
-      throw new Error('Player not found');
+      throw new Error("Player not found");
     }
 
-    this.log.debug({ code: room.code, playerId }, 'Player reconnected to room');
+    this.log.debug({ code: room.code, playerId }, "Player reconnected to room");
     return { room, player };
   }
 
@@ -133,7 +144,7 @@ export class GameStore {
 
     room.currentTurnId = player.id;
     this.broadcastState(room);
-    this.log.info({ code, playerId }, 'Current turn updated');
+    this.log.info({ code, playerId }, "Current turn updated");
   }
 
   async activateQuestion(
@@ -144,14 +155,16 @@ export class GameStore {
     const room = this.verifyHost(code, hostSecret);
 
     if (room.activeQuestion) {
-      throw new Error('Question already in play');
+      throw new Error("Question already in play");
     }
 
     const currentTurnId = this.getCurrentTurnPlayerId(room);
-    const assignedTo = currentTurnId ? this.getPlayer(room, currentTurnId).id : null;
+    const assignedTo = currentTurnId
+      ? this.getPlayer(room, currentTurnId).id
+      : null;
 
     if (!assignedTo) {
-      throw new Error('Set a player on turn before activating a question');
+      throw new Error("Set a player on turn before activating a question");
     }
 
     const requestedCategory = options.category ?? null;
@@ -170,17 +183,20 @@ export class GameStore {
     });
 
     const points = pointsForDifficulty(question.difficulty);
-    const choices = shuffleArray([...question.incorrectAnswers, question.correctAnswer]);
+    const choices = shuffleArray([
+      ...question.incorrectAnswers,
+      question.correctAnswer,
+    ]);
     const slotCategory = requestedCategory ?? question.category;
     const slotKey = `${slotCategory}|${question.difficulty}`;
 
     if (room.usedCategorySlots.has(slotKey)) {
-      throw new Error('That category and difficulty have already been played');
+      throw new Error("That category and difficulty have already been played");
     }
 
     room.activeQuestion = {
       id: question.id,
-      stage: 'awaitingHostDecision',
+      stage: "awaitingHostDecision",
       assignedTo,
       answeringPlayerId: assignedTo,
       attemptedPlayerIds: new Set([assignedTo]),
@@ -211,7 +227,7 @@ export class GameStore {
         category: question.category,
         difficulty: question.difficulty,
       },
-      'Question activated'
+      "Question activated"
     );
   }
 
@@ -220,11 +236,11 @@ export class GameStore {
     const active = room.activeQuestion;
 
     if (!active) {
-      throw new Error('No active question');
+      throw new Error("No active question");
     }
 
-    if (active.stage !== 'awaitingHostDecision') {
-      throw new Error('Buzzers already open');
+    if (active.stage !== "awaitingHostDecision") {
+      throw new Error("Buzzers already open");
     }
 
     if (active.answeringPlayerId) {
@@ -232,14 +248,17 @@ export class GameStore {
     }
 
     active.answeringPlayerId = null;
-    active.stage = 'openForBuzz';
+    active.stage = "openForBuzz";
 
     room.questionActive = true;
     room.buzzedBy = undefined;
     room.players.forEach((player: Player) => delete player.buzzedAt);
 
     this.broadcastState(room);
-    this.log.info({ code, questionId: active.id }, 'Question opened for buzzers');
+    this.log.info(
+      { code, questionId: active.id },
+      "Question opened for buzzers"
+    );
   }
 
   markAnswerCorrect(code: string, hostSecret: string, playerId?: string) {
@@ -247,13 +266,13 @@ export class GameStore {
     const active = room.activeQuestion;
 
     if (!active) {
-      throw new Error('No active question');
+      throw new Error("No active question");
     }
 
     const awardedPlayerId = playerId ?? active.answeringPlayerId;
 
     if (!awardedPlayerId) {
-      throw new Error('No answering player to award points');
+      throw new Error("No answering player to award points");
     }
 
     const player = this.getPlayer(room, awardedPlayerId);
@@ -274,15 +293,22 @@ export class GameStore {
     };
 
     this.finishQuestion(room);
-    this.log.info({ code, questionId: active.id, playerId: player.id }, 'Answer marked correct');
+    this.log.info(
+      { code, questionId: active.id, playerId: player.id },
+      "Answer marked correct"
+    );
   }
 
-  markAnswerIncorrect(code: string, hostSecret: string, options: { openBuzzers: boolean }) {
+  markAnswerIncorrect(
+    code: string,
+    hostSecret: string,
+    options: { openBuzzers: boolean }
+  ) {
     const room = this.verifyHost(code, hostSecret);
     const active = room.activeQuestion;
 
     if (!active) {
-      throw new Error('No active question');
+      throw new Error("No active question");
     }
 
     const answeringId = active.answeringPlayerId;
@@ -310,7 +336,7 @@ export class GameStore {
     };
 
     this.finishQuestion(room);
-    this.log.info({ code, questionId: active.id }, 'Answer marked incorrect');
+    this.log.info({ code, questionId: active.id }, "Answer marked incorrect");
   }
 
   cancelActiveQuestion(code: string, hostSecret: string) {
@@ -327,19 +353,19 @@ export class GameStore {
     room.players.forEach((player: Player) => delete player.buzzedAt);
 
     this.broadcastState(room);
-    this.log.info({ code, questionId: active.id }, 'Active question cancelled');
+    this.log.info({ code, questionId: active.id }, "Active question cancelled");
   }
 
   handleBuzz(code: string, playerId: string) {
     const room = this.ensureRoom(code);
     const active = room.activeQuestion;
 
-    if (!active || active.stage !== 'openForBuzz') {
-      throw new Error('Buzz not available now');
+    if (!active || active.stage !== "openForBuzz") {
+      throw new Error("Buzz not available now");
     }
 
     if (active.attemptedPlayerIds.has(playerId)) {
-      throw new Error('You already attempted this question');
+      throw new Error("You already attempted this question");
     }
 
     const player = this.getPlayer(room, playerId);
@@ -350,10 +376,10 @@ export class GameStore {
 
     active.answeringPlayerId = playerId;
     active.attemptedPlayerIds.add(playerId);
-    active.stage = 'awaitingHostDecision';
+    active.stage = "awaitingHostDecision";
 
     this.broadcastState(room);
-    this.log.info({ code: room.code, playerId }, 'Player buzzed');
+    this.log.info({ code: room.code, playerId }, "Player buzzed");
     return { room, player };
   }
 
@@ -361,7 +387,10 @@ export class GameStore {
     const room = this.ensureRoom(code);
     room.connections.add(connection);
     this.sendStateToConnection(room, connection);
-    this.log.debug({ code: room.code, role: connection.role, playerId: connection.playerId }, 'Registered websocket connection');
+    this.log.debug(
+      { code: room.code, role: connection.role, playerId: connection.playerId },
+      "Registered websocket connection"
+    );
   }
 
   removeConnection(code: string, connection: RoomConnection) {
@@ -374,9 +403,12 @@ export class GameStore {
 
     if (room.connections.size === 0 && room.players.size === 0) {
       this.rooms.delete(room.code);
-      this.log.info({ code: room.code }, 'Removed empty room');
+      this.log.info({ code: room.code }, "Removed empty room");
     }
-    this.log.debug({ code: room.code, remainingConnections: room.connections.size }, 'Removed websocket connection');
+    this.log.debug(
+      { code: room.code, remainingConnections: room.connections.size },
+      "Removed websocket connection"
+    );
   }
 
   snapshot(code: string): RoomSnapshot {
@@ -396,9 +428,9 @@ export class GameStore {
         if (connection.socket.readyState === WebSocket.OPEN) {
           connection.socket.send(
             JSON.stringify({
-              type: 'error',
-              message: 'Session closed by host',
-            }),
+              type: "error",
+              message: "Session closed by host",
+            })
           );
         }
       } catch {
@@ -412,7 +444,7 @@ export class GameStore {
       }
     }
 
-    this.log.info({ code: room.code }, 'Room destroyed by host');
+    this.log.info({ code: room.code }, "Room destroyed by host");
   }
 
   issueShareCode(code: string, hostSecret: string) {
@@ -430,14 +462,14 @@ export class GameStore {
     room.shareCodeExpiresAt = issuedAt + SHARE_CODE_TTL;
 
     this.broadcastState(room);
-    this.log.info({ code: room.code, shareCode }, 'Issued share code');
+    this.log.info({ code: room.code, shareCode }, "Issued share code");
     return { shareCode, expiresAt: room.shareCodeExpiresAt };
   }
 
   claimShareCode(shareCode: string) {
     const normalized = shareCode.trim();
     if (!/^[0-9]{4}$/.test(normalized)) {
-      throw new Error('Invalid share code');
+      throw new Error("Invalid share code");
     }
 
     for (const room of this.rooms.values()) {
@@ -451,7 +483,7 @@ export class GameStore {
       }
     }
 
-    throw new Error('Share code not found');
+    throw new Error("Share code not found");
   }
 
   removePlayer(code: string, playerId: string) {
@@ -486,7 +518,7 @@ export class GameStore {
       }
       if (room.activeQuestion.answeringPlayerId === playerId) {
         room.activeQuestion.answeringPlayerId = null;
-        if (room.activeQuestion.stage === 'awaitingHostDecision') {
+        if (room.activeQuestion.stage === "awaitingHostDecision") {
           room.questionActive = false;
           room.buzzedBy = undefined;
         }
@@ -524,12 +556,12 @@ export class GameStore {
 
     if (room.players.size === 0 && room.connections.size === 0) {
       this.rooms.delete(room.code);
-      this.log.info({ code: room.code }, 'Removed room after last player left');
+      this.log.info({ code: room.code }, "Removed room after last player left");
       return;
     }
 
     this.broadcastState(room);
-    this.log.info({ code: room.code, playerId: player.id }, 'Player left room');
+    this.log.info({ code: room.code, playerId: player.id }, "Player left room");
   }
 
   listRooms() {
@@ -546,7 +578,7 @@ export class GameStore {
     for (const room of this.rooms.values()) {
       this.cleanupShareCode(room);
       const hostOnline = Array.from(room.connections).some(
-        (connection) => connection.role === 'host',
+        (connection) => connection.role === "host"
       );
       const shareInfo = this.getActiveShareInfo(room);
 
@@ -572,10 +604,10 @@ export class GameStore {
     for (const connection of room.connections) {
       if (connection.socket.readyState === WebSocket.OPEN) {
         const payload = JSON.stringify({
-          type: 'state',
+          type: "state",
           payload: this.buildSnapshot(room, {
-            includeCorrectAnswer: connection.role === 'host',
-            includeShareCode: connection.role === 'host',
+            includeCorrectAnswer: connection.role === "host",
+            includeShareCode: connection.role === "host",
           }),
         });
         connection.socket.send(payload);
@@ -586,7 +618,9 @@ export class GameStore {
     }
 
     if (staleConnections.length > 0) {
-      staleConnections.forEach((connection) => room.connections.delete(connection));
+      staleConnections.forEach((connection) =>
+        room.connections.delete(connection)
+      );
     }
   }
 
@@ -594,12 +628,12 @@ export class GameStore {
     if (connection.socket.readyState === WebSocket.OPEN) {
       connection.socket.send(
         JSON.stringify({
-          type: 'state',
+          type: "state",
           payload: this.buildSnapshot(room, {
-            includeCorrectAnswer: connection.role === 'host',
-            includeShareCode: connection.role === 'host',
+            includeCorrectAnswer: connection.role === "host",
+            includeShareCode: connection.role === "host",
           }),
-        }),
+        })
       );
     }
   }
@@ -607,7 +641,7 @@ export class GameStore {
   private ensureRoom(code: string) {
     const room = this.rooms.get(code);
     if (!room) {
-      throw new Error('Room not found');
+      throw new Error("Room not found");
     }
 
     return room;
@@ -616,7 +650,7 @@ export class GameStore {
   private getPlayer(room: GameRoom, playerId: string) {
     const player = room.players.get(playerId);
     if (!player) {
-      throw new Error('Player not found');
+      throw new Error("Player not found");
     }
 
     return player;
@@ -649,10 +683,12 @@ export class GameStore {
       return;
     }
 
-    const startIndex = typeof fromIndex === 'number' ? fromIndex : room.currentTurnIndex ?? 0;
+    const startIndex =
+      typeof fromIndex === "number" ? fromIndex : room.currentTurnIndex ?? 0;
 
     for (let offset = 1; offset <= room.turnOrder.length; offset += 1) {
-      const nextIndex = (startIndex + offset + room.turnOrder.length) % room.turnOrder.length;
+      const nextIndex =
+        (startIndex + offset + room.turnOrder.length) % room.turnOrder.length;
       const nextId = room.turnOrder[nextIndex];
       if (room.players.has(nextId)) {
         room.currentTurnIndex = nextIndex;
@@ -681,7 +717,7 @@ export class GameStore {
 
   private buildSnapshot(
     room: GameRoom,
-    options: { includeCorrectAnswer?: boolean; includeShareCode?: boolean } = {},
+    options: { includeCorrectAnswer?: boolean; includeShareCode?: boolean } = {}
   ): RoomSnapshot {
     const currentTurnId = this.getCurrentTurnPlayerId(room);
     const includeCorrectAnswer = options.includeCorrectAnswer ?? false;
@@ -707,8 +743,13 @@ export class GameStore {
           points: room.activeQuestion.points,
           stage: room.activeQuestion.stage,
           assignedTo: this.playerRef(room, room.activeQuestion.assignedTo),
-          answeringPlayer: this.playerRef(room, room.activeQuestion.answeringPlayerId),
-          attemptedPlayerIds: Array.from(room.activeQuestion.attemptedPlayerIds),
+          answeringPlayer: this.playerRef(
+            room,
+            room.activeQuestion.answeringPlayerId
+          ),
+          attemptedPlayerIds: Array.from(
+            room.activeQuestion.attemptedPlayerIds
+          ),
           ...(includeCorrectAnswer
             ? {
                 correctAnswer: room.activeQuestion.correctAnswer,
@@ -722,16 +763,20 @@ export class GameStore {
 
     const lastResult = room.lastResult
       ? {
-      id: room.lastResult.id,
-      category: room.lastResult.category,
-      difficulty: room.lastResult.difficulty,
-      title: room.lastResult.title,
-      points: room.lastResult.points,
-      answeredCorrectly: room.lastResult.answeredCorrectly,
-      answeredBy: room.lastResult.answeredBy ? this.playerRef(room, room.lastResult.answeredBy) : null,
-      assignedTo: room.lastResult.assignedTo ? this.playerRef(room, room.lastResult.assignedTo) : null,
-      pointsAwarded: room.lastResult.pointsAwarded,
-      correctAnswer: room.lastResult.correctAnswer,
+          id: room.lastResult.id,
+          category: room.lastResult.category,
+          difficulty: room.lastResult.difficulty,
+          title: room.lastResult.title,
+          points: room.lastResult.points,
+          answeredCorrectly: room.lastResult.answeredCorrectly,
+          answeredBy: room.lastResult.answeredBy
+            ? this.playerRef(room, room.lastResult.answeredBy)
+            : null,
+          assignedTo: room.lastResult.assignedTo
+            ? this.playerRef(room, room.lastResult.assignedTo)
+            : null,
+          pointsAwarded: room.lastResult.pointsAwarded,
+          correctAnswer: room.lastResult.correctAnswer,
         }
       : null;
 

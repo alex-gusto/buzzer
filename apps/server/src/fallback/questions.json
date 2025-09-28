@@ -1,0 +1,1422 @@
+{
+  "arts_and_literature": {
+    "easy": [
+      {
+        "id": "arts_and_literature_easy_1",
+        "question": "Хто написав серію романів про Гаррі Поттера?",
+        "correctAnswer": "Дж. К. Ролінґ",
+        "incorrectAnswers": ["Стівен Кінг", "Дж. Р. Р. Толкін", "Клайв Льюїс"],
+        "category": "arts_and_literature",
+        "difficulty": "easy"
+      },
+      {
+        "id": "arts_and_literature_easy_2",
+        "question": "До якого жанру належить картина «Мона Ліза»?",
+        "correctAnswer": "Портрет",
+        "incorrectAnswers": ["Пейзаж", "Натюрморт", "Марина"],
+        "category": "arts_and_literature",
+        "difficulty": "easy"
+      },
+      {
+        "id": "arts_and_literature_easy_3",
+        "question": "Якою мовою написано роман «Дон Кіхот»?",
+        "correctAnswer": "Іспанською",
+        "incorrectAnswers": ["Французькою", "Італійською", "Португальською"],
+        "category": "arts_and_literature",
+        "difficulty": "easy"
+      },
+      {
+        "id": "arts_and_literature_easy_4",
+        "question": "Хто автор антиутопії «1984»?",
+        "correctAnswer": "Джордж Оруелл",
+        "incorrectAnswers": ["Олдос Гакслі", "Рей Бредбері", "Курт Воннеґут"],
+        "category": "arts_and_literature",
+        "difficulty": "easy"
+      },
+      {
+        "id": "arts_and_literature_easy_5",
+        "question": "Який інструмент зазвичай використовують для живопису аквареллю?",
+        "correctAnswer": "Кисть",
+        "incorrectAnswers": ["Долото", "Шпатель", "Різець"],
+        "category": "arts_and_literature",
+        "difficulty": "easy"
+      }
+    ],
+    "medium": [
+      {
+        "id": "arts_and_literature_medium_1",
+        "question": "З яким художнім напрямом пов’язують Клода Моне?",
+        "correctAnswer": "Імпресіонізм",
+        "incorrectAnswers": ["Кубізм", "Сюрреалізм", "Поп-арт"],
+        "category": "arts_and_literature",
+        "difficulty": "medium"
+      },
+      {
+        "id": "arts_and_literature_medium_2",
+        "question": "Хто написав роман «Сто років самотності»?",
+        "correctAnswer": "Ґабріель Ґарсія Маркес",
+        "incorrectAnswers": [
+          "М. Варґас Льйоса",
+          "Х. Л. Борхес",
+          "Хуліо Кортасар"
+        ],
+        "category": "arts_and_literature",
+        "difficulty": "medium"
+      },
+      {
+        "id": "arts_and_literature_medium_3",
+        "question": "У якій країні відбуваються події роману «Анна Кареніна»?",
+        "correctAnswer": "Росія",
+        "incorrectAnswers": ["Франція", "Італія", "Німеччина"],
+        "category": "arts_and_literature",
+        "difficulty": "medium"
+      },
+      {
+        "id": "arts_and_literature_medium_4",
+        "question": "Хто спроєктував Собор Святого Сімейства в Барселоні?",
+        "correctAnswer": "Антоні Ґауді",
+        "incorrectAnswers": ["Ле Корбюзьє", "Норман Фостер", "Міс ван дер Рое"],
+        "category": "arts_and_literature",
+        "difficulty": "medium"
+      },
+      {
+        "id": "arts_and_literature_medium_5",
+        "question": "Як називається вигадане ім’я, під яким автор публікує твори?",
+        "correctAnswer": "Псевдонім",
+        "incorrectAnswers": ["Епонім", "Акронім", "Топонім"],
+        "category": "arts_and_literature",
+        "difficulty": "medium"
+      }
+    ],
+    "hard": [
+      {
+        "id": "arts_and_literature_hard_1",
+        "question": "Хто є автором опери «Воццек»?",
+        "correctAnswer": "Альбан Берґ",
+        "incorrectAnswers": [
+          "Арнольд Шенберґ",
+          "Ріхард Штраус",
+          "Ігор Стравінський"
+        ],
+        "category": "arts_and_literature",
+        "difficulty": "hard"
+      },
+      {
+        "id": "arts_and_literature_hard_2",
+        "question": "Хто створив картину «Чорний квадрат»?",
+        "correctAnswer": "Казимир Малевич",
+        "incorrectAnswers": [
+          "Василь Кандинський",
+          "Пабло Пікассо",
+          "Піт Мондріан"
+        ],
+        "category": "arts_and_literature",
+        "difficulty": "hard"
+      },
+      {
+        "id": "arts_and_literature_hard_3",
+        "question": "Хто автор поетичного циклу «Кримські сонети»?",
+        "correctAnswer": "Адам Міцкевич",
+        "incorrectAnswers": [
+          "Юліуш Словацький",
+          "Чеслав Мілош",
+          "Збіґнєв Герберт"
+        ],
+        "category": "arts_and_literature",
+        "difficulty": "hard"
+      },
+      {
+        "id": "arts_and_literature_hard_4",
+        "question": "Яка техніка друку полягає в різьбленні зображення на дереві?",
+        "correctAnswer": "Ксилографія",
+        "incorrectAnswers": ["Офорт", "Літографія", "Мецо-тинто"],
+        "category": "arts_and_literature",
+        "difficulty": "hard"
+      },
+      {
+        "id": "arts_and_literature_hard_5",
+        "question": "Якою мовою написано національну поему «Пан Тадеуш»?",
+        "correctAnswer": "Польською",
+        "incorrectAnswers": ["Литовською", "Білоруською", "Українською"],
+        "category": "arts_and_literature",
+        "difficulty": "hard"
+      }
+    ]
+  },
+  "film_and_tv": {
+    "easy": [
+      {
+        "id": "film_and_tv_easy_1",
+        "question": "Хто зіграв Тоні Старка у Кіновсесвіті Marvel?",
+        "correctAnswer": "Роберт Дауні-молодший",
+        "incorrectAnswers": ["Кріс Еванс", "Кріс Гемсворт", "Марк Руффало"],
+        "category": "film_and_tv",
+        "difficulty": "easy"
+      },
+      {
+        "id": "film_and_tv_easy_2",
+        "question": "Яку престижну нагороду в кіно вручає Американська кіноакадемія?",
+        "correctAnswer": "Оскар",
+        "incorrectAnswers": ["Еммі", "Тоні", "Греммі"],
+        "category": "film_and_tv",
+        "difficulty": "easy"
+      },
+      {
+        "id": "film_and_tv_easy_3",
+        "question": "Як називається серіал про вчителя хімії, який стає виробником наркотиків?",
+        "correctAnswer": "Breaking Bad",
+        "incorrectAnswers": ["The Wire", "Narcos", "Ozark"],
+        "category": "film_and_tv",
+        "difficulty": "easy"
+      },
+      {
+        "id": "film_and_tv_easy_4",
+        "question": "У якій країні заснована студія Ghibli?",
+        "correctAnswer": "Японія",
+        "incorrectAnswers": ["Південна Корея", "Китай", "США"],
+        "category": "film_and_tv",
+        "difficulty": "easy"
+      },
+      {
+        "id": "film_and_tv_easy_5",
+        "question": "Хто режисер фільму «Титанік» (1997)?",
+        "correctAnswer": "Джеймс Кемерон",
+        "incorrectAnswers": [
+          "Рідлі Скотт",
+          "Стівен Спілберґ",
+          "Крістофер Нолан"
+        ],
+        "category": "film_and_tv",
+        "difficulty": "easy"
+      }
+    ],
+    "medium": [
+      {
+        "id": "film_and_tv_medium_1",
+        "question": "Який тип фільмів зробив Чарлі Чапліна всесвітньо відомим?",
+        "correctAnswer": "Німа комедія",
+        "incorrectAnswers": ["Мюзикл", "Фільм-нуар", "Докудрама"],
+        "category": "film_and_tv",
+        "difficulty": "medium"
+      },
+      {
+        "id": "film_and_tv_medium_2",
+        "question": "Хто зіграв Джокера у фільмі «Темний лицар» (2008)?",
+        "correctAnswer": "Гіт Леджер",
+        "incorrectAnswers": ["Гоакін Фенікс", "Джаред Лето", "Джек Ніколсон"],
+        "category": "film_and_tv",
+        "difficulty": "medium"
+      },
+      {
+        "id": "film_and_tv_medium_3",
+        "question": "Який серіал HBO встановив рекорд за кількістю премій Еммі серед драм?",
+        "correctAnswer": "Гра престолів",
+        "incorrectAnswers": [
+          "Клан Сопрано",
+          "Коронa",
+          "Людина у високому замку"
+        ],
+        "category": "film_and_tv",
+        "difficulty": "medium"
+      },
+      {
+        "id": "film_and_tv_medium_4",
+        "question": "Який був перший повнометражний анімаційний фільм у світовому прокаті?",
+        "correctAnswer": "«Білосніжка і семеро гномів»",
+        "incorrectAnswers": ["«Піноккіо»", "«Фантазія»", "«Дамбо»"],
+        "category": "film_and_tv",
+        "difficulty": "medium"
+      },
+      {
+        "id": "film_and_tv_medium_5",
+        "question": "У якому місті відбуваються події ситкому «Друзі»?",
+        "correctAnswer": "Нью-Йорк",
+        "incorrectAnswers": ["Лос-Анджелес", "Чикаґо", "Сіетл"],
+        "category": "film_and_tv",
+        "difficulty": "medium"
+      }
+    ],
+    "hard": [
+      {
+        "id": "film_and_tv_hard_1",
+        "question": "Хто є одним із засновників руху «Догма 95»?",
+        "correctAnswer": "Ларс фон Трієр",
+        "incorrectAnswers": [
+          "Томас Вінтерберґ",
+          "Йим Єрґ",
+          "Ніколас Віндінґ Рефн"
+        ],
+        "category": "film_and_tv",
+        "difficulty": "hard"
+      },
+      {
+        "id": "film_and_tv_hard_2",
+        "question": "Який режисер зняв фільм «Tokyo Story» (1953)?",
+        "correctAnswer": "Ясудзіро Одзу",
+        "incorrectAnswers": [
+          "Акіра Куросава",
+          "Мікіо Нарусе",
+          "Кендзі Мідзогуці"
+        ],
+        "category": "film_and_tv",
+        "difficulty": "hard"
+      },
+      {
+        "id": "film_and_tv_hard_3",
+        "question": "Який принцип у монтажі демонструє залежність сприйняття кадру від сусідніх з ним кадрів?",
+        "correctAnswer": "Ефект Кулешова",
+        "incorrectAnswers": [
+          "Матч-монтаж",
+          "Паралельний монтаж",
+          "Монтаж атракціонів"
+        ],
+        "category": "film_and_tv",
+        "difficulty": "hard"
+      },
+      {
+        "id": "film_and_tv_hard_4",
+        "question": "Хто зняв фільм «Сталкер» (1979)?",
+        "correctAnswer": "Андрій Тарковський",
+        "incorrectAnswers": [
+          "Серґєй Параджанов",
+          "Міхаїл Калатозов",
+          "Олексій Герман"
+        ],
+        "category": "film_and_tv",
+        "difficulty": "hard"
+      },
+      {
+        "id": "film_and_tv_hard_5",
+        "question": "Яка країна створила фільм «Паразити» (2019)?",
+        "correctAnswer": "Південна Корея",
+        "incorrectAnswers": ["Японія", "Китай", "США"],
+        "category": "film_and_tv",
+        "difficulty": "hard"
+      }
+    ]
+  },
+  "food_and_drink": {
+    "easy": [
+      {
+        "id": "food_and_drink_easy_1",
+        "question": "З чого виготовляють тофу?",
+        "correctAnswer": "Із соєвих бобів",
+        "incorrectAnswers": ["З пшениці", "З кукурудзи", "З рису"],
+        "category": "food_and_drink",
+        "difficulty": "easy"
+      },
+      {
+        "id": "food_and_drink_easy_2",
+        "question": "З якого фрукта готують гуакамоле?",
+        "correctAnswer": "Авокадо",
+        "incorrectAnswers": ["Манго", "Папая", "Лайм"],
+        "category": "food_and_drink",
+        "difficulty": "easy"
+      },
+      {
+        "id": "food_and_drink_easy_3",
+        "question": "Який напій традиційно роблять із винограду?",
+        "correctAnswer": "Вино",
+        "incorrectAnswers": ["Пиво", "Сидр", "Саке"],
+        "category": "food_and_drink",
+        "difficulty": "easy"
+      },
+      {
+        "id": "food_and_drink_easy_4",
+        "question": "Який італійський твердий сир часто труть на пасту?",
+        "correctAnswer": "Пармезан",
+        "incorrectAnswers": ["Рікота", "Моцарела", "Горґонзола"],
+        "category": "food_and_drink",
+        "difficulty": "easy"
+      },
+      {
+        "id": "food_and_drink_easy_5",
+        "question": "Яка країна вважається батьківщиною сучасної піци?",
+        "correctAnswer": "Італія",
+        "incorrectAnswers": ["США", "Франція", "Греція"],
+        "category": "food_and_drink",
+        "difficulty": "easy"
+      }
+    ],
+    "medium": [
+      {
+        "id": "food_and_drink_medium_1",
+        "question": "Яка паста має форму спіралей?",
+        "correctAnswer": "Фузіллі",
+        "incorrectAnswers": ["Фарфалле", "Пене", "Спагеті"],
+        "category": "food_and_drink",
+        "difficulty": "medium"
+      },
+      {
+        "id": "food_and_drink_medium_2",
+        "question": "Який процес перетворює молоко на йогурт?",
+        "correctAnswer": "Ферментація",
+        "incorrectAnswers": [
+          "Кислотний гідроліз",
+          "Дистиляція",
+          "Пастеризація"
+        ],
+        "category": "food_and_drink",
+        "difficulty": "medium"
+      },
+      {
+        "id": "food_and_drink_medium_3",
+        "question": "Який коктейль містить ром, лайм, м’яту і газовану воду?",
+        "correctAnswer": "Мохіто",
+        "incorrectAnswers": ["Негроні", "Дайкірі", "Манхеттен"],
+        "category": "food_and_drink",
+        "difficulty": "medium"
+      },
+      {
+        "id": "food_and_drink_medium_4",
+        "question": "Що таке тандир у кулінарії?",
+        "correctAnswer": "Піч для випікання",
+        "incorrectAnswers": ["Різновид спеції", "Сорт борошна", "Кухонний ніж"],
+        "category": "food_and_drink",
+        "difficulty": "medium"
+      },
+      {
+        "id": "food_and_drink_medium_5",
+        "question": "Який сорт рису зазвичай використовують для різото?",
+        "correctAnswer": "Арборіо",
+        "incorrectAnswers": ["Жасмин", "Басматі", "Карнаролі"],
+        "category": "food_and_drink",
+        "difficulty": "medium"
+      }
+    ],
+    "hard": [
+      {
+        "id": "food_and_drink_hard_1",
+        "question": "Що означає техніка «су-від»?",
+        "correctAnswer": "Готування у вакуумі при низькій температурі у водяній бані",
+        "incorrectAnswers": [
+          "Смаження у фритюрі",
+          "Запікання на грилі",
+          "Приготування на парі"
+        ],
+        "category": "food_and_drink",
+        "difficulty": "hard"
+      },
+      {
+        "id": "food_and_drink_hard_2",
+        "question": "Яка сполука відповідає за пекучість перцю чилі?",
+        "correctAnswer": "Капсаїцин",
+        "incorrectAnswers": ["Аліцин", "Піперин", "Кумін"],
+        "category": "food_and_drink",
+        "difficulty": "hard"
+      },
+      {
+        "id": "food_and_drink_hard_3",
+        "question": "Що таке мірін у японській кухні?",
+        "correctAnswer": "Солодке рисове вино для готування",
+        "incorrectAnswers": [
+          "Паста з соєвих бобів",
+          "Маринований імбир",
+          "Сушені водорості"
+        ],
+        "category": "food_and_drink",
+        "difficulty": "hard"
+      },
+      {
+        "id": "food_and_drink_hard_4",
+        "question": "З якої крупи роблять кускус?",
+        "correctAnswer": "Із пшеничної манки (дурум)",
+        "incorrectAnswers": ["Із гречки", "Із кукурудзи", "Із рису"],
+        "category": "food_and_drink",
+        "difficulty": "hard"
+      },
+      {
+        "id": "food_and_drink_hard_5",
+        "question": "Яка французька техніка соусів передбачає додавання холодного масла наприкінці для блиску?",
+        "correctAnswer": "Монте-о-бюр",
+        "incorrectAnswers": ["Беур ман’є", "Емульгація", "Бланшування"],
+        "category": "food_and_drink",
+        "difficulty": "hard"
+      }
+    ]
+  },
+  "general_knowledge": {
+    "easy": [
+      {
+        "id": "general_knowledge_easy_1",
+        "question": "Скільки днів у звичайному році?",
+        "correctAnswer": "365",
+        "incorrectAnswers": ["366", "360", "364"],
+        "category": "general_knowledge",
+        "difficulty": "easy"
+      },
+      {
+        "id": "general_knowledge_easy_2",
+        "question": "Столиця Франції?",
+        "correctAnswer": "Париж",
+        "incorrectAnswers": ["Марсель", "Ліон", "Ніцца"],
+        "category": "general_knowledge",
+        "difficulty": "easy"
+      },
+      {
+        "id": "general_knowledge_easy_3",
+        "question": "Яка планета найближча до Сонця?",
+        "correctAnswer": "Меркурій",
+        "incorrectAnswers": ["Венера", "Земля", "Марс"],
+        "category": "general_knowledge",
+        "difficulty": "easy"
+      },
+      {
+        "id": "general_knowledge_easy_4",
+        "question": "Найбільший океан на Землі?",
+        "correctAnswer": "Тихий",
+        "incorrectAnswers": [
+          "Атлантичний",
+          "Індійський",
+          "Північний Льодовитий"
+        ],
+        "category": "general_knowledge",
+        "difficulty": "easy"
+      },
+      {
+        "id": "general_knowledge_easy_5",
+        "question": "Скільки континентів виділяють за поширеною моделлю?",
+        "correctAnswer": "7",
+        "incorrectAnswers": ["5", "6", "8"],
+        "category": "general_knowledge",
+        "difficulty": "easy"
+      }
+    ],
+    "medium": [
+      {
+        "id": "general_knowledge_medium_1",
+        "question": "Яка хімічна формула води?",
+        "correctAnswer": "H₂O",
+        "incorrectAnswers": ["H₂", "HO₂", "H₂O₂"],
+        "category": "general_knowledge",
+        "difficulty": "medium"
+      },
+      {
+        "id": "general_knowledge_medium_2",
+        "question": "Хто автор праці «Походження видів»?",
+        "correctAnswer": "Чарльз Дарвін",
+        "incorrectAnswers": ["Ґреґор Мендель", "Луї Пастер", "Карл Лінней"],
+        "category": "general_knowledge",
+        "difficulty": "medium"
+      },
+      {
+        "id": "general_knowledge_medium_3",
+        "question": "У якому році почалася Друга світова війна?",
+        "correctAnswer": "1939",
+        "incorrectAnswers": ["1914", "1941", "1945"],
+        "category": "general_knowledge",
+        "difficulty": "medium"
+      },
+      {
+        "id": "general_knowledge_medium_4",
+        "question": "Найвища гора над рівнем моря?",
+        "correctAnswer": "Еверест",
+        "incorrectAnswers": ["Кіліманджаро", "Монблан", "К2"],
+        "category": "general_knowledge",
+        "difficulty": "medium"
+      },
+      {
+        "id": "general_knowledge_medium_5",
+        "question": "Який елемент має хімічний символ Fe?",
+        "correctAnswer": "Залізо",
+        "incorrectAnswers": ["Ферум", "Фтор", "Олово"],
+        "category": "general_knowledge",
+        "difficulty": "medium"
+      }
+    ],
+    "hard": [
+      {
+        "id": "general_knowledge_hard_1",
+        "question": "Яка країна має найбільше часових поясів (включно з заморськими територіями)?",
+        "correctAnswer": "Франція",
+        "incorrectAnswers": ["Росія", "США", "Канада"],
+        "category": "general_knowledge",
+        "difficulty": "hard"
+      },
+      {
+        "id": "general_knowledge_hard_2",
+        "question": "Яке перше просте число після 100?",
+        "correctAnswer": "101",
+        "incorrectAnswers": ["103", "107", "109"],
+        "category": "general_knowledge",
+        "difficulty": "hard"
+      },
+      {
+        "id": "general_knowledge_hard_3",
+        "question": "Яка країна має маорійську назву Аотеароа?",
+        "correctAnswer": "Нова Зеландія",
+        "incorrectAnswers": ["Австралія", "Фіджі", "Самоа"],
+        "category": "general_knowledge",
+        "difficulty": "hard"
+      },
+      {
+        "id": "general_knowledge_hard_4",
+        "question": "Хто сформулював теореми про неповноту в математиці?",
+        "correctAnswer": "Курт Ґедель",
+        "incorrectAnswers": ["Алан Тюрінґ", "Давид Гільберт", "Бернард Рассел"],
+        "category": "general_knowledge",
+        "difficulty": "hard"
+      },
+      {
+        "id": "general_knowledge_hard_5",
+        "question": "Яка мова має найбільше носіїв як рідної?",
+        "correctAnswer": "Китайська (мандринська)",
+        "incorrectAnswers": ["Англійська", "Іспанська", "Гіндустані"],
+        "category": "general_knowledge",
+        "difficulty": "hard"
+      }
+    ]
+  },
+  "geography": {
+    "easy": [
+      {
+        "id": "geography_easy_1",
+        "question": "Столиця Іспанії?",
+        "correctAnswer": "Мадрид",
+        "incorrectAnswers": ["Барселона", "Севілья", "Валенсія"],
+        "category": "geography",
+        "difficulty": "easy"
+      },
+      {
+        "id": "geography_easy_2",
+        "question": "Яка річка протікає через Каїр?",
+        "correctAnswer": "Ніл",
+        "incorrectAnswers": ["Тигр", "Євфрат", "Конго"],
+        "category": "geography",
+        "difficulty": "easy"
+      },
+      {
+        "id": "geography_easy_3",
+        "question": "Найбільша гаряча пустеля світу?",
+        "correctAnswer": "Сахара",
+        "incorrectAnswers": ["Атакама", "Ґобі", "Калахарі"],
+        "category": "geography",
+        "difficulty": "easy"
+      },
+      {
+        "id": "geography_easy_4",
+        "question": "На якому континенті розташована Бразилія?",
+        "correctAnswer": "Південна Америка",
+        "incorrectAnswers": ["Африка", "Європа", "Азія"],
+        "category": "geography",
+        "difficulty": "easy"
+      },
+      {
+        "id": "geography_easy_5",
+        "question": "У якій країні знаходиться місто Сідней?",
+        "correctAnswer": "Австралія",
+        "incorrectAnswers": ["Нова Зеландія", "Велика Британія", "США"],
+        "category": "geography",
+        "difficulty": "easy"
+      }
+    ],
+    "medium": [
+      {
+        "id": "geography_medium_1",
+        "question": "Яка південноамериканська країна не має виходу до моря?",
+        "correctAnswer": "Парагвай",
+        "incorrectAnswers": ["Уругвай", "Колумбія", "Перу"],
+        "category": "geography",
+        "difficulty": "medium"
+      },
+      {
+        "id": "geography_medium_2",
+        "question": "Який гірський хребет традиційно вважають кордоном між Європою та Азією?",
+        "correctAnswer": "Урал",
+        "incorrectAnswers": ["Альпи", "Кавказ", "Карпати"],
+        "category": "geography",
+        "difficulty": "medium"
+      },
+      {
+        "id": "geography_medium_3",
+        "question": "Столиця Канади?",
+        "correctAnswer": "Оттава",
+        "incorrectAnswers": ["Торонто", "Монреаль", "Ванкувер"],
+        "category": "geography",
+        "difficulty": "medium"
+      },
+      {
+        "id": "geography_medium_4",
+        "question": "Яка країна повністю оточена територією Італії?",
+        "correctAnswer": "Сан-Марино",
+        "incorrectAnswers": ["Андорра", "Мальта", "Монако"],
+        "category": "geography",
+        "difficulty": "medium"
+      },
+      {
+        "id": "geography_medium_5",
+        "question": "Яка протока сполучає Атлантичний та Тихий океани поблизу Південної Америки?",
+        "correctAnswer": "Пролив Магеллана",
+        "incorrectAnswers": [
+          "Беринґова протока",
+          "Ґібралтарська протока",
+          "Дрейкова протока"
+        ],
+        "category": "geography",
+        "difficulty": "medium"
+      }
+    ],
+    "hard": [
+      {
+        "id": "geography_hard_1",
+        "question": "Яка європейська країна має найбільшу кількість островів?",
+        "correctAnswer": "Швеція",
+        "incorrectAnswers": ["Норвегія", "Фінляндія", "Хорватія"],
+        "category": "geography",
+        "difficulty": "hard"
+      },
+      {
+        "id": "geography_hard_2",
+        "question": "Найвищий водоспад світу?",
+        "correctAnswer": "Анхель",
+        "incorrectAnswers": ["Іґуасу", "Ніаґара", "Вікторія"],
+        "category": "geography",
+        "difficulty": "hard"
+      },
+      {
+        "id": "geography_hard_3",
+        "question": "Столиця Казахстану станом на сьогодні?",
+        "correctAnswer": "Астана",
+        "incorrectAnswers": ["Алмати", "Нур-Султан", "Шимкент"],
+        "category": "geography",
+        "difficulty": "hard"
+      },
+      {
+        "id": "geography_hard_4",
+        "question": "Яка країна має ексклав Калінінградську область?",
+        "correctAnswer": "Росія",
+        "incorrectAnswers": ["Литва", "Польща", "Білорусь"],
+        "category": "geography",
+        "difficulty": "hard"
+      },
+      {
+        "id": "geography_hard_5",
+        "question": "Який океан омиває східне узбережжя Африки?",
+        "correctAnswer": "Індійський",
+        "incorrectAnswers": ["Атлантичний", "Тихий", "Північний Льодовитий"],
+        "category": "geography",
+        "difficulty": "hard"
+      }
+    ]
+  },
+  "history": {
+    "easy": [
+      {
+        "id": "history_easy_1",
+        "question": "Хто був першим президентом США?",
+        "correctAnswer": "Джордж Вашингтон",
+        "incorrectAnswers": [
+          "Авраам Лінкольн",
+          "Томас Джефферсон",
+          "Джон Адамс"
+        ],
+        "category": "history",
+        "difficulty": "easy"
+      },
+      {
+        "id": "history_easy_2",
+        "question": "Яке місто було зруйноване Везувієм у 79 році н.е.?",
+        "correctAnswer": "Помпеї",
+        "incorrectAnswers": ["Геркуланум", "Неаполь", "Рим"],
+        "category": "history",
+        "difficulty": "easy"
+      },
+      {
+        "id": "history_easy_3",
+        "question": "Який відомий корабель затонув у 1912 році?",
+        "correctAnswer": "«Титанік»",
+        "incorrectAnswers": ["«Лузитанія»", "«Бісмарк»", "«Мері Роуз»"],
+        "category": "history",
+        "difficulty": "easy"
+      },
+      {
+        "id": "history_easy_4",
+        "question": "Хто заснував Монгольську імперію?",
+        "correctAnswer": "Чинґісхан",
+        "incorrectAnswers": ["Кублай-хан", "Тамерлан", "Бату-хан"],
+        "category": "history",
+        "difficulty": "easy"
+      },
+      {
+        "id": "history_easy_5",
+        "question": "Падіння якої стіни в 1989 році символізувало кінець «холодної війни»?",
+        "correctAnswer": "Берлінської стіни",
+        "incorrectAnswers": [
+          "Китайської стіни",
+          "Стіни Плачу",
+          "Адріанового валу"
+        ],
+        "category": "history",
+        "difficulty": "easy"
+      }
+    ],
+    "medium": [
+      {
+        "id": "history_medium_1",
+        "question": "У якому столітті почалася Французька революція?",
+        "correctAnswer": "XVIII століття",
+        "incorrectAnswers": ["XVII століття", "XIX століття", "XVI століття"],
+        "category": "history",
+        "difficulty": "medium"
+      },
+      {
+        "id": "history_medium_2",
+        "question": "Яка імперія побудувала дорогу Віа Аппія?",
+        "correctAnswer": "Римська імперія",
+        "incorrectAnswers": [
+          "Османська імперія",
+          "Перська імперія",
+          "Карфаген"
+        ],
+        "category": "history",
+        "difficulty": "medium"
+      },
+      {
+        "id": "history_medium_3",
+        "question": "Яку англійську королеву називали «Дівою королевою»?",
+        "correctAnswer": "Єлизавета I",
+        "incorrectAnswers": ["Вікторія", "Анна", "Марія Стюарт"],
+        "category": "history",
+        "difficulty": "medium"
+      },
+      {
+        "id": "history_medium_4",
+        "question": "Який документ 1215 року обмежив владу англійського короля?",
+        "correctAnswer": "Велика хартія вольностей (Magna Carta)",
+        "incorrectAnswers": [
+          "Білль про права",
+          "Габеас корпус акт",
+          "Акт про унію"
+        ],
+        "category": "history",
+        "difficulty": "medium"
+      },
+      {
+        "id": "history_medium_5",
+        "question": "Хто в 1498 році відкрив морський шлях до Індії навколо Африки?",
+        "correctAnswer": "Васко да Ґама",
+        "incorrectAnswers": [
+          "Бартоломеу Діаш",
+          "Фернан Маґеллан",
+          "Христофор Колумб"
+        ],
+        "category": "history",
+        "difficulty": "medium"
+      }
+    ],
+    "hard": [
+      {
+        "id": "history_hard_1",
+        "question": "Який мирний договір завершив Тридцятирічну війну (1618–1648)?",
+        "correctAnswer": "Вестфальський мир",
+        "incorrectAnswers": [
+          "Аугсбурзький мир",
+          "Піренейський мир",
+          "Утрехтський мир"
+        ],
+        "category": "history",
+        "difficulty": "hard"
+      },
+      {
+        "id": "history_hard_2",
+        "question": "За якої династії зведено більшість збережених ділянок Великого китайського муру?",
+        "correctAnswer": "Мін",
+        "incorrectAnswers": ["Цінь", "Хань", "Юань"],
+        "category": "history",
+        "difficulty": "hard"
+      },
+      {
+        "id": "history_hard_3",
+        "question": "Яка цивілізація використовувала лінійне письмо Б?",
+        "correctAnswer": "Мікенська цивілізація",
+        "incorrectAnswers": ["Мінойська цивілізація", "Фінікійці", "Етруски"],
+        "category": "history",
+        "difficulty": "hard"
+      },
+      {
+        "id": "history_hard_4",
+        "question": "Яка битва 732 року зупинила просування Омейядів у Франкії?",
+        "correctAnswer": "Битва при Пуатьє (Тури)",
+        "incorrectAnswers": [
+          "Битва при Гастінґсі",
+          "Битва при Манцикерті",
+          "Битва при Азенкурі"
+        ],
+        "category": "history",
+        "difficulty": "hard"
+      },
+      {
+        "id": "history_hard_5",
+        "question": "Який період японської історії відомий політикою ізоляції сакоку?",
+        "correctAnswer": "Період Едо (Токуґава)",
+        "incorrectAnswers": [
+          "Період Мейдзі",
+          "Період Камакура",
+          "Період Хейан"
+        ],
+        "category": "history",
+        "difficulty": "hard"
+      }
+    ]
+  },
+  "music": {
+    "easy": [
+      {
+        "id": "music_easy_1",
+        "question": "Який інструмент зазвичай має 88 клавіш?",
+        "correctAnswer": "Фортепіано",
+        "incorrectAnswers": ["Орган", "Синтезатор", "Клавесин"],
+        "category": "music",
+        "difficulty": "easy"
+      },
+      {
+        "id": "music_easy_2",
+        "question": "Кого часто називають «королем поп-музики»?",
+        "correctAnswer": "Майкл Джексон",
+        "incorrectAnswers": ["Принс", "Елвіс Преслі", "Девід Бові"],
+        "category": "music",
+        "difficulty": "easy"
+      },
+      {
+        "id": "music_easy_3",
+        "question": "Який гурт виконав пісню «Yellow Submarine»?",
+        "correctAnswer": "The Beatles",
+        "incorrectAnswers": ["The Rolling Stones", "Queen", "Pink Floyd"],
+        "category": "music",
+        "difficulty": "easy"
+      },
+      {
+        "id": "music_easy_4",
+        "question": "Який музичний термін означає «голосно» і позначається літерою f?",
+        "correctAnswer": "Форте",
+        "incorrectAnswers": ["Піано", "Мецофорте", "Крещендо"],
+        "category": "music",
+        "difficulty": "easy"
+      },
+      {
+        "id": "music_easy_5",
+        "question": "З якої країни походить жанр реггі?",
+        "correctAnswer": "Ямайка",
+        "incorrectAnswers": ["США", "Нігерія", "Бразилія"],
+        "category": "music",
+        "difficulty": "easy"
+      }
+    ],
+    "medium": [
+      {
+        "id": "music_medium_1",
+        "question": "Хто композитор «Місячної сонати»?",
+        "correctAnswer": "Людвіґ ван Бетховен",
+        "incorrectAnswers": [
+          "Вольфґанґ Амадей Моцарт",
+          "Фредерік Шопен",
+          "Йоганн Себастьян Бах"
+        ],
+        "category": "music",
+        "difficulty": "medium"
+      },
+      {
+        "id": "music_medium_2",
+        "question": "Який темп означає «Allegro»?",
+        "correctAnswer": "Швидкий",
+        "incorrectAnswers": ["Повільний", "Помірний", "Дуже повільний"],
+        "category": "music",
+        "difficulty": "medium"
+      },
+      {
+        "id": "music_medium_3",
+        "question": "Хто виконавиця альбому «21»?",
+        "correctAnswer": "Адель",
+        "incorrectAnswers": ["Бейонсе", "Ріанна", "Лана Дель Рей"],
+        "category": "music",
+        "difficulty": "medium"
+      },
+      {
+        "id": "music_medium_4",
+        "question": "Який інструмент належить до смичкових?",
+        "correctAnswer": "Скрипка",
+        "incorrectAnswers": ["Флейта", "Труба", "Гобой"],
+        "category": "music",
+        "difficulty": "medium"
+      },
+      {
+        "id": "music_medium_5",
+        "question": "Хто автор циклу концертів «Пори року»?",
+        "correctAnswer": "Антоніо Вівальді",
+        "incorrectAnswers": ["Й. С. Бах", "П. І. Чайковський", "Г. Ф. Гендель"],
+        "category": "music",
+        "difficulty": "medium"
+      }
+    ],
+    "hard": [
+      {
+        "id": "music_hard_1",
+        "question": "Хто розробив дванадцятитонову техніку композиції?",
+        "correctAnswer": "Арнольд Шенберґ",
+        "incorrectAnswers": [
+          "Альбан Берґ",
+          "Антон Веберн",
+          "Ігор Стравінський"
+        ],
+        "category": "music",
+        "difficulty": "hard"
+      },
+      {
+        "id": "music_hard_2",
+        "question": "До якого періоду відносять творчість Ґійома де Машо?",
+        "correctAnswer": "Середньовіччя (XIV ст.)",
+        "incorrectAnswers": ["Ренесанс", "Бароко", "Класицизм"],
+        "category": "music",
+        "difficulty": "hard"
+      },
+      {
+        "id": "music_hard_3",
+        "question": "Який тактовий розмір має класичний вальс?",
+        "correctAnswer": "3/4",
+        "incorrectAnswers": ["2/4", "4/4", "6/8"],
+        "category": "music",
+        "difficulty": "hard"
+      },
+      {
+        "id": "music_hard_4",
+        "question": "Хто написав оперу «Ніс»?",
+        "correctAnswer": "Дмитро Шостакович",
+        "incorrectAnswers": [
+          "Модест Мусоргський",
+          "Ніколай Римський-Корсаков",
+          "Сергій Прокоф’єв"
+        ],
+        "category": "music",
+        "difficulty": "hard"
+      },
+      {
+        "id": "music_hard_5",
+        "question": "Як називається каденція з послідовністю V–I?",
+        "correctAnswer": "Автентична каденція",
+        "incorrectAnswers": [
+          "Плагальна каденція",
+          "Напівкаденція",
+          "Тонічна педаль"
+        ],
+        "category": "music",
+        "difficulty": "hard"
+      }
+    ]
+  },
+  "science": {
+    "easy": [
+      {
+        "id": "science_easy_1",
+        "question": "Яка планета найбільш відома своїми кільцями?",
+        "correctAnswer": "Сатурн",
+        "incorrectAnswers": ["Юпітер", "Уран", "Нептун"],
+        "category": "science",
+        "difficulty": "easy"
+      },
+      {
+        "id": "science_easy_2",
+        "question": "Що вимірюють у градусах Цельсія?",
+        "correctAnswer": "Температуру",
+        "incorrectAnswers": ["Тиск", "Вологість", "Масу"],
+        "category": "science",
+        "difficulty": "easy"
+      },
+      {
+        "id": "science_easy_3",
+        "question": "Який газ становить найбільшу частку повітря, яким ми дихаємо?",
+        "correctAnswer": "Азот",
+        "incorrectAnswers": ["Кисень", "Вуглекислий газ", "Аргон"],
+        "category": "science",
+        "difficulty": "easy"
+      },
+      {
+        "id": "science_easy_4",
+        "question": "Скільки планет у Сонячній системі?",
+        "correctAnswer": "8",
+        "incorrectAnswers": ["7", "9", "10"],
+        "category": "science",
+        "difficulty": "easy"
+      },
+      {
+        "id": "science_easy_5",
+        "question": "Яка сила притягує предмети до Землі?",
+        "correctAnswer": "Гравітація",
+        "incorrectAnswers": ["Магнетизм", "Тертя", "Електростатика"],
+        "category": "science",
+        "difficulty": "easy"
+      }
+    ],
+    "medium": [
+      {
+        "id": "science_medium_1",
+        "question": "Який орган фільтрує кров і виробляє сечу?",
+        "correctAnswer": "Нирки",
+        "incorrectAnswers": ["Печінка", "Селезінка", "Підшлункова залоза"],
+        "category": "science",
+        "difficulty": "medium"
+      },
+      {
+        "id": "science_medium_2",
+        "question": "Яка хімічна формула кухонної солі?",
+        "correctAnswer": "NaCl",
+        "incorrectAnswers": ["KCl", "Na₂CO₃", "NaOH"],
+        "category": "science",
+        "difficulty": "medium"
+      },
+      {
+        "id": "science_medium_3",
+        "question": "Одиниця сили в SI?",
+        "correctAnswer": "Ньютон",
+        "incorrectAnswers": ["Джоуль", "Паскаль", "Ват"],
+        "category": "science",
+        "difficulty": "medium"
+      },
+      {
+        "id": "science_medium_4",
+        "question": "Хто сформулював закон всесвітнього тяжіння?",
+        "correctAnswer": "Ісаак Ньютон",
+        "incorrectAnswers": ["Ґалілео Ґалілей", "Альберт Айнштайн", "Кеплер"],
+        "category": "science",
+        "difficulty": "medium"
+      },
+      {
+        "id": "science_medium_5",
+        "question": "Який розділ біології вивчає спадковість і мінливість?",
+        "correctAnswer": "Генетика",
+        "incorrectAnswers": ["Екологія", "Етологія", "Ботаніка"],
+        "category": "science",
+        "difficulty": "medium"
+      }
+    ],
+    "hard": [
+      {
+        "id": "science_hard_1",
+        "question": "Які частинки є носіями сильної ядерної взаємодії?",
+        "correctAnswer": "Глюони",
+        "incorrectAnswers": ["Фотони", "Бозони W і Z", "Гравітони"],
+        "category": "science",
+        "difficulty": "hard"
+      },
+      {
+        "id": "science_hard_2",
+        "question": "Яке рівняння описує релятивістську квантову поведінку електрона?",
+        "correctAnswer": "Рівняння Дірака",
+        "incorrectAnswers": [
+          "Рівняння Шредінґера",
+          "Рівняння Клейна—Ґордона",
+          "Рівняння Нав’є—Стокса"
+        ],
+        "category": "science",
+        "difficulty": "hard"
+      },
+      {
+        "id": "science_hard_3",
+        "question": "Який тип енергії зберігається в акумуляторі до використання?",
+        "correctAnswer": "Хімічна потенціальна енергія",
+        "incorrectAnswers": [
+          "Кінетична енергія",
+          "Теплова енергія",
+          "Світлова енергія"
+        ],
+        "category": "science",
+        "difficulty": "hard"
+      },
+      {
+        "id": "science_hard_4",
+        "question": "Який закон точно описує спектр випромінювання абсолютно чорного тіла?",
+        "correctAnswer": "Закон Планка",
+        "incorrectAnswers": [
+          "Закон Релея—Джинса",
+          "Закон Стефана—Больцмана",
+          "Закон Віна"
+        ],
+        "category": "science",
+        "difficulty": "hard"
+      },
+      {
+        "id": "science_hard_5",
+        "question": "Яка органела еукаріот відповідає за синтез більшості АТФ?",
+        "correctAnswer": "Мітохондрії",
+        "incorrectAnswers": ["Рибосоми", "Лізосоми", "Апарат Ґольджі"],
+        "category": "science",
+        "difficulty": "hard"
+      }
+    ]
+  },
+  "society_and_culture": {
+    "easy": [
+      {
+        "id": "society_and_culture_easy_1",
+        "question": "Яке свято багато країн відзначають 25 грудня?",
+        "correctAnswer": "Різдво",
+        "incorrectAnswers": ["Великдень", "День подяки", "Новоріччя"],
+        "category": "society_and_culture",
+        "difficulty": "easy"
+      },
+      {
+        "id": "society_and_culture_easy_2",
+        "question": "Яке весняне християнське свято асоціюють із писанками?",
+        "correctAnswer": "Великдень",
+        "incorrectAnswers": ["Трійця", "Стрітення", "Богоявлення"],
+        "category": "society_and_culture",
+        "difficulty": "easy"
+      },
+      {
+        "id": "society_and_culture_easy_3",
+        "question": "Як називаються правила ввічливої поведінки в суспільстві та за столом?",
+        "correctAnswer": "Етикет",
+        "incorrectAnswers": ["Етика", "Естетика", "Етнографія"],
+        "category": "society_and_culture",
+        "difficulty": "easy"
+      },
+      {
+        "id": "society_and_culture_easy_4",
+        "question": "Як називається традиційна українська вишита сорочка?",
+        "correctAnswer": "Вишиванка",
+        "incorrectAnswers": ["Кімаоно", "Сарі", "Кілт"],
+        "category": "society_and_culture",
+        "difficulty": "easy"
+      },
+      {
+        "id": "society_and_culture_easy_5",
+        "question": "Яка мова є офіційною в більшості країн Латинської Америки?",
+        "correctAnswer": "Іспанська",
+        "incorrectAnswers": ["Португальська", "Французька", "Англійська"],
+        "category": "society_and_culture",
+        "difficulty": "easy"
+      }
+    ],
+    "medium": [
+      {
+        "id": "society_and_culture_medium_1",
+        "question": "Як називається наука про населення та його характеристики?",
+        "correctAnswer": "Демографія",
+        "incorrectAnswers": ["Соціологія", "Етнологія", "Політологія"],
+        "category": "society_and_culture",
+        "difficulty": "medium"
+      },
+      {
+        "id": "society_and_culture_medium_2",
+        "question": "До якої релігії належить будівля, яку називають синагогою?",
+        "correctAnswer": "Юдаїзм",
+        "incorrectAnswers": ["Іслам", "Християнство", "Буддизм"],
+        "category": "society_and_culture",
+        "difficulty": "medium"
+      },
+      {
+        "id": "society_and_culture_medium_3",
+        "question": "Який термін описує засвоєння культурних норм і ролей новими поколіннями?",
+        "correctAnswer": "Соціалізація",
+        "incorrectAnswers": ["Асиміляція", "Акумуляція", "Дифузія"],
+        "category": "society_and_culture",
+        "difficulty": "medium"
+      },
+      {
+        "id": "society_and_culture_medium_4",
+        "question": "З якою країною асоціюється музичний жанр фаду?",
+        "correctAnswer": "Португалія",
+        "incorrectAnswers": ["Іспанія", "Італія", "Греція"],
+        "category": "society_and_culture",
+        "difficulty": "medium"
+      },
+      {
+        "id": "society_and_culture_medium_5",
+        "question": "Який показник використовують для вимірювання нерівності доходів?",
+        "correctAnswer": "Коефіцієнт Джині",
+        "incorrectAnswers": [
+          "Індекс споживчих цін",
+          "ВВП на душу населення",
+          "Індекс людського розвитку"
+        ],
+        "category": "society_and_culture",
+        "difficulty": "medium"
+      }
+    ],
+    "hard": [
+      {
+        "id": "society_and_culture_hard_1",
+        "question": "Який термін означає співіснування багатьох культур без домінації однієї?",
+        "correctAnswer": "Культурний плюралізм",
+        "incorrectAnswers": [
+          "Культурна асиміляція",
+          "Культурна апропріація",
+          "Культурний монолізм"
+        ],
+        "category": "society_and_culture",
+        "difficulty": "hard"
+      },
+      {
+        "id": "society_and_culture_hard_2",
+        "question": "Хто автор праці «Протестантська етика і дух капіталізму»?",
+        "correctAnswer": "Макс Вебер",
+        "incorrectAnswers": ["Еміль Дюркгайм", "Карл Маркс", "Ґеорґ Зіммель"],
+        "category": "society_and_culture",
+        "difficulty": "hard"
+      },
+      {
+        "id": "society_and_culture_hard_3",
+        "question": "Яка антропологічна позиція застерігає від оцінювання іншої культури за мірками власної?",
+        "correctAnswer": "Культурний релятивізм",
+        "incorrectAnswers": ["Етноцентризм", "Космополітизм", "Універсалізм"],
+        "category": "society_and_culture",
+        "difficulty": "hard"
+      },
+      {
+        "id": "society_and_culture_hard_4",
+        "question": "Як називається теорія, що розглядає суспільство як систему взаємопов’язаних частин з певними функціями?",
+        "correctAnswer": "Структурний функціоналізм",
+        "incorrectAnswers": [
+          "Символічний інтеракціонізм",
+          "Теорія конфлікту",
+          "Феноменологія"
+        ],
+        "category": "society_and_culture",
+        "difficulty": "hard"
+      },
+      {
+        "id": "society_and_culture_hard_5",
+        "question": "Який термін описує процес повного зникнення мови як засобу спілкування?",
+        "correctAnswer": "Мовна смерть",
+        "incorrectAnswers": [
+          "Мовне змішування",
+          "Мовна зміна",
+          "Мовна інтерференція"
+        ],
+        "category": "society_and_culture",
+        "difficulty": "hard"
+      }
+    ]
+  },
+  "sport_and_leisure": {
+    "easy": [
+      {
+        "id": "sport_and_leisure_easy_1",
+        "question": "Скільки гравців одночасно на полі в одній футбольній команді?",
+        "correctAnswer": "11",
+        "incorrectAnswers": ["10", "12", "9"],
+        "category": "sport_and_leisure",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sport_and_leisure_easy_2",
+        "question": "Скільки очок дає триочковий кидок у баскетболі?",
+        "correctAnswer": "3",
+        "incorrectAnswers": ["2", "4", "1"],
+        "category": "sport_and_leisure",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sport_and_leisure_easy_3",
+        "question": "Який вид спорту використовує ракетку та волан?",
+        "correctAnswer": "Бадмінтон",
+        "incorrectAnswers": ["Теніс", "Сквош", "Падл-теніс"],
+        "category": "sport_and_leisure",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sport_and_leisure_easy_4",
+        "question": "У якій грі використовують фігури короля та ферзя?",
+        "correctAnswer": "Шахи",
+        "incorrectAnswers": ["Шашки", "Ґо", "Нарди"],
+        "category": "sport_and_leisure",
+        "difficulty": "easy"
+      },
+      {
+        "id": "sport_and_leisure_easy_5",
+        "question": "Який м’яч менший за розміром?",
+        "correctAnswer": "Тенісний",
+        "incorrectAnswers": ["Футбольний", "Баскетбольний", "Волейбольний"],
+        "category": "sport_and_leisure",
+        "difficulty": "easy"
+      }
+    ],
+    "medium": [
+      {
+        "id": "sport_and_leisure_medium_1",
+        "question": "Скільки сетів потрібно виграти для перемоги в більшості жіночих тенісних матчів?",
+        "correctAnswer": "2 з 3",
+        "incorrectAnswers": ["3 з 5", "1 з 1", "3 з 3"],
+        "category": "sport_and_leisure",
+        "difficulty": "medium"
+      },
+      {
+        "id": "sport_and_leisure_medium_2",
+        "question": "Яка стандартна дистанція марафону?",
+        "correctAnswer": "42,195 км",
+        "incorrectAnswers": ["21,097 км", "40 км", "50 км"],
+        "category": "sport_and_leisure",
+        "difficulty": "medium"
+      },
+      {
+        "id": "sport_and_leisure_medium_3",
+        "question": "Який термін у шахах описує ситуацію, коли хід неможливий, але король не під шахом?",
+        "correctAnswer": "Пат",
+        "incorrectAnswers": [
+          "Мат",
+          "Нічия за правилами 50 ходів",
+          "Триразове повторення"
+        ],
+        "category": "sport_and_leisure",
+        "difficulty": "medium"
+      },
+      {
+        "id": "sport_and_leisure_medium_4",
+        "question": "У якому виді спорту існує правило «офсайд»?",
+        "correctAnswer": "Футбол",
+        "incorrectAnswers": ["Баскетбол", "Волейбол", "Гандбол"],
+        "category": "sport_and_leisure",
+        "difficulty": "medium"
+      },
+      {
+        "id": "sport_and_leisure_medium_5",
+        "question": "Скільки карт у стандартній колоді без джокерів?",
+        "correctAnswer": "52",
+        "incorrectAnswers": ["54", "36", "48"],
+        "category": "sport_and_leisure",
+        "difficulty": "medium"
+      }
+    ],
+    "hard": [
+      {
+        "id": "sport_and_leisure_hard_1",
+        "question": "У шахах: як називається взяття пішаком фігури суперника, що щойно зробила крок на два поля повз нього?",
+        "correctAnswer": "Ан пасан",
+        "incorrectAnswers": ["Рокіровка", "Подвійний удар", "Вилка"],
+        "category": "sport_and_leisure",
+        "difficulty": "hard"
+      },
+      {
+        "id": "sport_and_leisure_hard_2",
+        "question": "Який мінімум ходів потрібен для «дурного мату»?",
+        "correctAnswer": "2",
+        "incorrectAnswers": ["3", "4", "5"],
+        "category": "sport_and_leisure",
+        "difficulty": "hard"
+      },
+      {
+        "id": "sport_and_leisure_hard_3",
+        "question": "Який максимальний брейк можливий у снукері без фолів?",
+        "correctAnswer": "147",
+        "incorrectAnswers": ["155", "140", "150"],
+        "category": "sport_and_leisure",
+        "difficulty": "hard"
+      },
+      {
+        "id": "sport_and_leisure_hard_4",
+        "question": "Скільки перехресть має повнорозмірна дошка Ґо (19×19)?",
+        "correctAnswer": "361",
+        "incorrectAnswers": ["324", "400", "289"],
+        "category": "sport_and_leisure",
+        "difficulty": "hard"
+      },
+      {
+        "id": "sport_and_leisure_hard_5",
+        "question": "Яка довжина олімпійського басейну?",
+        "correctAnswer": "50 метрів",
+        "incorrectAnswers": ["25 метрів", "33 метри", "100 метрів"],
+        "category": "sport_and_leisure",
+        "difficulty": "hard"
+      }
+    ]
+  }
+}

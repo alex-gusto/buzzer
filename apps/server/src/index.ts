@@ -63,7 +63,10 @@ const LeaveRoomBodySchema = z.object({
 });
 
 const ShareClaimBodySchema = z.object({
-  shareCode: z.string().trim().regex(/^[0-9]{4}$/),
+  shareCode: z
+    .string()
+    .trim()
+    .regex(/^[0-9]{4}$/),
 });
 
 function handleHostError(
@@ -415,9 +418,18 @@ fastify.get("/api/trivia/questions", async (request, reply) => {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const clientDistPath = path.resolve(__dirname, "../client");
+const clientDistCandidates = [
+  path.resolve(__dirname, "../../dist/client"),
+  path.resolve(__dirname, "../client"),
+  path.resolve(process.cwd(), "dist/client"),
+  path.resolve(process.cwd(), "client"),
+];
 
-if (existsSync(clientDistPath)) {
+const clientDistPath = clientDistCandidates.find((candidate) =>
+  existsSync(candidate)
+);
+
+if (clientDistPath) {
   await fastify.register(fastifyStatic, {
     root: clientDistPath,
     prefix: "/",
@@ -435,7 +447,7 @@ if (existsSync(clientDistPath)) {
   });
 } else {
   fastify.log.warn(
-    { clientDistPath },
+    { candidates: clientDistCandidates },
     "Client dist directory not found; static asset serving disabled"
   );
 }
@@ -609,6 +621,20 @@ fastify.register(async (app) => {
   };
 
   app.get("/ws/:code", { websocket: true }, wsHandler);
+});
+
+// Fastify
+fastify.post("/api/debug/echo", async (req, reply) => {
+  return {
+    method: req.method,
+    url: req.url,
+    ip: req.ip,
+    httpVersion: req.raw.httpVersion,
+    headers: req.headers,
+    cookies: (req as any).cookies ?? null,
+    body: req.body ?? null,
+    time: new Date().toISOString(),
+  };
 });
 
 const port = Number(process.env.PORT ?? 3000);

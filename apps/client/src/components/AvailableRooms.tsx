@@ -65,6 +65,16 @@ export function AvailableRooms() {
             Pick a room below to join instantly or create a new one above.
           </p>
         </div>
+
+        <div>
+          <button
+            className="inline-flex items-center justify-center rounded-xl border border-slate-500/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-100 transition hover:border-slate-300/60 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={() => roomsQuery.refetch()}
+            disabled={roomsQuery.isFetching}
+          >
+            REFRESH
+          </button>
+        </div>
       </header>
       <div className="rounded-2xl border border-slate-500/30 bg-slate-950/70">
         {roomsQuery.isLoading ? (
