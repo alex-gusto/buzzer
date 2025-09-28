@@ -88,13 +88,14 @@ function PlayerRoute() {
 function CodeRoute() {
   const params = useParams();
   const [searchParams] = useSearchParams();
+  const hasHostSecretParam = searchParams.has("hostSecret");
   const hostSecret = searchParams.get("hostSecret");
 
   if (!params.code) {
     return <Navigate to="/" replace />;
   }
 
-  if (!hostSecret || hostSecret.trim().length === 0) {
+  if (hasHostSecretParam && (!hostSecret || hostSecret.trim().length === 0)) {
     return <HostSecretError />;
   }
 

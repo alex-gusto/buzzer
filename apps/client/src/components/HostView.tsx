@@ -10,25 +10,19 @@ import {
   openQuestionForBuzzers,
   setTurn,
   getTriviaCategories,
-  shareRoom,
 } from "../api";
 import { useSessionConnection } from "../hooks/useSessionConnection";
 import type { RoomSnapshot, SocketStatus } from "../types";
 import {
-  CategoryOption,
   HostActiveQuestionCard,
   HostAvailableSlotsCard,
   HostLastResultCard,
   HostPlayersList,
   HostRoomSummary,
+  HostSession,
   HostTurnControls,
 } from "./host";
 import { clearHostSecret, saveHostSecret } from "../utils/hostSessionStorage";
-
-type HostSession = {
-  code: string;
-  hostSecret: string;
-};
 
 type HostViewProps = {
   onExit?: () => void;
@@ -75,11 +69,7 @@ export function HostView({ onExit }: HostViewProps) {
   );
   const [actionError, setActionError] = useState<string | null>(null);
   const [showDestroyConfirm, setShowDestroyConfirm] = useState(false);
-  const [shareDetails, setShareDetails] = useState<{
-    shareCode: string;
-    expiresAt: number | null;
-  } | null>(null);
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   useEffect(() => {
     if (code && hostSecretParam) {
@@ -105,8 +95,10 @@ export function HostView({ onExit }: HostViewProps) {
     navigate("/");
   };
 
-  const inviteLink = session ? `${origin}/${session.code}` : '';
-  const boardLink = session ? `${origin}/${session.code}/questions?hostSecret=${session.hostSecret}` : '';
+  const inviteLink = session ? `${origin}/${session.code}` : "";
+  const boardLink = session
+    ? `${origin}/${session.code}/questions?hostSecret=${session.hostSecret}`
+    : "";
 
   const registerPayload = useMemo(
     () =>
@@ -124,17 +116,6 @@ export function HostView({ onExit }: HostViewProps) {
     code: session?.code ?? null,
     registerPayload,
   });
-
-  useEffect(() => {
-    if (state?.shareCode) {
-      setShareDetails({
-        shareCode: state.shareCode,
-        expiresAt: state.shareCodeExpiresAt ?? null,
-      });
-    } else {
-      setShareDetails(null);
-    }
-  }, [state?.shareCode, state?.shareCodeExpiresAt]);
 
   const players = useMemo(() => {
     if (!state) {
@@ -346,7 +327,8 @@ export function HostView({ onExit }: HostViewProps) {
   });
 
   const destroySessionMutation = useMutation<void, Error, HostSession>({
-    mutationFn: async (payload) => destroySession(payload.code, payload.hostSecret),
+    mutationFn: async (payload) =>
+      destroySession(payload.code, payload.hostSecret),
     onSuccess: (_, payload) => {
       clearHostSecret(payload.code);
       setShowDestroyConfirm(false);
@@ -354,7 +336,7 @@ export function HostView({ onExit }: HostViewProps) {
       if (onExit) {
         onExit();
       }
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     },
     onError: (error) => {
       setActionError(
@@ -371,24 +353,6 @@ export function HostView({ onExit }: HostViewProps) {
     markIncorrectMutation.isPending ||
     cancelQuestionMutation.isPending ||
     destroySessionMutation.isPending;
-
-  const shareRoomMutation = useMutation<{ shareCode: string; expiresAt: number | null }, Error, HostSession>({
-    mutationFn: async (payload) => shareRoom(payload.code, payload.hostSecret),
-    onSuccess: (result) => {
-      setShareDetails({ shareCode: result.shareCode, expiresAt: result.expiresAt });
-      setActionError(null);
-    },
-    onError: (error) => {
-      setActionError(error instanceof Error ? error.message : 'Unable to generate share code');
-    },
-  });
-
-  const activeShareCode = shareDetails?.shareCode ?? null;
-  const shareExpiresAt = shareDetails?.expiresAt ?? null;
-  const shareExpiresInMs = shareExpiresAt ? shareExpiresAt - Date.now() : null;
-  const shareExpiresLabel = shareExpiresInMs && shareExpiresInMs > 0
-    ? `${Math.ceil(shareExpiresInMs / 60000)} min`
-    : null;
 
   const activeQuestionStatus = useMemo(() => {
     if (!activeQuestion) {
@@ -464,12 +428,12 @@ export function HostView({ onExit }: HostViewProps) {
           </p>
         )}
 
-
         {!session ? (
           <div className="mt-8 grid place-items-center gap-4 rounded-2xl border border-dashed border-slate-500/40 bg-slate-900/60 p-12 text-center">
             <p className="text-lg text-slate-200">Host access required</p>
             <p className="max-w-md text-sm text-slate-400">
-              Use the host link you received after creating the game. You can start a new session from the home page if needed.
+              Use the host link you received after creating the game. You can
+              start a new session from the home page if needed.
             </p>
             <button
               type="button"
@@ -483,7 +447,7 @@ export function HostView({ onExit }: HostViewProps) {
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr),340px]">
             <div className="flex flex-col gap-6">
               <HostRoomSummary
-                code={session.code}
+                session={session}
                 statusClassName={statusStyles[status]}
                 statusLabel={status}
                 inviteLink={inviteLink}
@@ -491,10 +455,12 @@ export function HostView({ onExit }: HostViewProps) {
               />
 
               <HostTurnControls
-                currentTurnLabel={currentTurn?.name ?? '—'}
+                currentTurnLabel={currentTurn?.name ?? "—"}
                 statusMessage={activeQuestionStatus}
                 onCancelQuestion={() => cancelQuestionMutation.mutate()}
-                cancelDisabled={cancelQuestionMutation.isPending || !activeQuestion}
+                cancelDisabled={
+                  cancelQuestionMutation.isPending || !activeQuestion
+                }
                 categoryOptions={categoryOptions}
                 selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
@@ -507,7 +473,10 @@ export function HostView({ onExit }: HostViewProps) {
                   }
                   void activateQuestionMutation.mutateAsync({
                     category: selectedCategory,
-                    difficulty: selectedDifficulty as 'easy' | 'medium' | 'hard',
+                    difficulty: selectedDifficulty as
+                      | "easy"
+                      | "medium"
+                      | "hard",
                   });
                 }}
                 canActivate={canActivateQuestion}
@@ -517,7 +486,9 @@ export function HostView({ onExit }: HostViewProps) {
                 onPassToBuzzers={() => markIncorrectMutation.mutate(true)}
                 canMarkIncorrect={canCloseIncorrect}
                 onMarkCorrect={() =>
-                  markCorrectMutation.mutate(activeQuestion?.answeringPlayer?.playerId)
+                  markCorrectMutation.mutate(
+                    activeQuestion?.answeringPlayer?.playerId
+                  )
                 }
                 canMarkCorrect={canMarkCorrect}
               />
@@ -529,51 +500,44 @@ export function HostView({ onExit }: HostViewProps) {
               <HostAvailableSlotsCard
                 categoryCount={categoryOptions.length}
                 selectedCategoryLabel={
-                  categoryOptions.find((option) => option.value === selectedCategory)?.label ?? '—'
+                  categoryOptions.find(
+                    (option) => option.value === selectedCategory
+                  )?.label ?? "—"
                 }
                 selectedDifficultyLabel={
-                  selectedDifficulty ? formatCategoryLabel(selectedDifficulty) : '—'
+                  selectedDifficulty
+                    ? formatCategoryLabel(selectedDifficulty)
+                    : "—"
                 }
               />
 
               <section className="rounded-2xl bg-slate-900/70 px-6 py-5 text-sm text-slate-100">
                 <header className="flex flex-col gap-1">
-                  <span className="text-xs uppercase tracking-[0.3em] text-slate-400">Share board access</span>
-                  <h2 className="text-xl font-semibold text-slate-100">Broadcast a 4-digit code</h2>
+                  <span className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                    Share board access
+                  </span>
+                  <h2 className="text-xl font-semibold text-slate-100">
+                    Broadcast a 4-digit code
+                  </h2>
                 </header>
                 <p className="mt-3 text-slate-300">
-                  Viewers can open the questions board from the home page by entering the code you share.
+                  Viewers can open the questions board from the home page by
+                  entering the code you share.
                 </p>
-                <div className="mt-4 flex flex-wrap items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => session && shareRoomMutation.mutate(session)}
-                    disabled={shareRoomMutation.isPending || !session}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:from-cyan-300 hover:to-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {shareRoomMutation.isPending ? 'Generating...' : 'Generate share code'}
-                  </button>
-                  {activeShareCode ? (
-                    <div className="flex items-baseline gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm">
-                      <span className="text-xs uppercase tracking-[0.3em] text-cyan-200">Code</span>
-                      <span className="text-2xl font-semibold tracking-[0.4em] text-cyan-100">{activeShareCode}</span>
-                      {shareExpiresLabel ? (
-                        <span className="text-xs text-cyan-100/80">expires in {shareExpiresLabel}</span>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">No active code</span>
-                  )}
-                </div>
               </section>
 
               <section className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-5 text-sm text-rose-100">
                 <header className="flex flex-col gap-1 text-rose-200">
-                  <span className="text-xs uppercase tracking-[0.3em]">Danger zone</span>
-                  <h2 className="text-xl font-semibold text-rose-100">End this game</h2>
+                  <span className="text-xs uppercase tracking-[0.3em]">
+                    Danger zone
+                  </span>
+                  <h2 className="text-xl font-semibold text-rose-100">
+                    End this game
+                  </h2>
                 </header>
                 <p className="mt-3 text-rose-100/80">
-                  Closing the room disconnects every player and clears the board. This cannot be undone.
+                  Closing the room disconnects every player and clears the
+                  board. This cannot be undone.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <button
@@ -582,7 +546,9 @@ export function HostView({ onExit }: HostViewProps) {
                     disabled={destroySessionMutation.isPending || !session}
                     className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:from-rose-400 hover:to-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {destroySessionMutation.isPending ? 'Ending game...' : 'End game for everyone'}
+                    {destroySessionMutation.isPending
+                      ? "Ending game..."
+                      : "End game for everyone"}
                   </button>
                 </div>
               </section>
@@ -601,9 +567,12 @@ export function HostView({ onExit }: HostViewProps) {
       {showDestroyConfirm && session ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 px-4 py-10 backdrop-blur-sm">
           <div className="w-full max-w-lg rounded-3xl border border-slate-500/40 bg-slate-950/95 p-6 shadow-xl">
-            <h2 className="text-2xl font-semibold text-slate-100">End game for everyone?</h2>
+            <h2 className="text-2xl font-semibold text-slate-100">
+              End game for everyone?
+            </h2>
             <p className="mt-3 text-sm text-slate-300">
-              All players will be disconnected and the room will be removed. You will need to create a new room to play again.
+              All players will be disconnected and the room will be removed. You
+              will need to create a new room to play again.
             </p>
             <div className="mt-6 flex flex-wrap justify-end gap-3">
               <button
@@ -615,11 +584,15 @@ export function HostView({ onExit }: HostViewProps) {
               </button>
               <button
                 type="button"
-                onClick={() => session && destroySessionMutation.mutate(session)}
+                onClick={() =>
+                  session && destroySessionMutation.mutate(session)
+                }
                 disabled={destroySessionMutation.isPending}
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:from-rose-400 hover:to-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {destroySessionMutation.isPending ? 'Ending...' : 'Yes, end game'}
+                {destroySessionMutation.isPending
+                  ? "Ending..."
+                  : "Yes, end game"}
               </button>
             </div>
           </div>
