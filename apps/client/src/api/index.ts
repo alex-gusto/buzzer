@@ -52,6 +52,8 @@ export type RoomOverview = {
   playerCount: number;
   questionActive: boolean;
   hostOnline: boolean;
+  shareActive: boolean;
+  shareExpiresAt: number | null;
 };
 
 export async function listRooms() {
@@ -128,6 +130,22 @@ export async function destroySession(code: string, hostSecret: string) {
     method: "POST",
     headers: JSON_HEADERS,
     body: JSON.stringify({ hostSecret }),
+  });
+}
+
+export async function shareRoom(code: string, hostSecret: string) {
+  return request<{ shareCode: string; expiresAt: number | null }>(`/api/session/${code}/share`, {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ hostSecret }),
+  });
+}
+
+export async function claimShareCode(shareCode: string) {
+  return request<{ code: string; hostSecret: string; expiresAt: number | null }>("/api/share/claim", {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ shareCode }),
   });
 }
 

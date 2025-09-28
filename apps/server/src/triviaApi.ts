@@ -2,7 +2,13 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
+import { translateQuestion } from './translator.js';
+
 const API_BASE = (process.env.TRIVIA_API_BASE ?? 'https://the-trivia-api.com/api').replace(/\/$/, '');
+const DEFAULT_REGIONS = (process.env.TRIVIA_API_REGIONS ?? process.env.TRIVIA_API_REGION ?? '')
+  .split(',')
+  .map((region) => region.trim().toUpperCase())
+  .filter(Boolean);
 
 export type TriviaCategoryResponse = Record<string, string[]>;
 
@@ -114,6 +120,7 @@ type FetchQuestionOptions = {
   category?: string;
   difficulty?: string;
   excludeIds?: Set<string>;
+  regions?: string[];
 };
 
 async function fetchFallbackQuestion(options: FetchQuestionOptions): Promise<TriviaQuestion> {
@@ -142,7 +149,11 @@ async function fetchFallbackQuestion(options: FetchQuestionOptions): Promise<Tri
       const filtered = questions.filter((q) => !options.excludeIds?.has(q.id));
       const chosen = pickRandom(filtered);
       if (chosen) {
-        return chosen;
+        return {
+          ...chosen,
+          category: slugify(chosen.category ?? cat),
+          difficulty: chosen.difficulty ?? diff,
+        };
       }
     }
   }
@@ -161,6 +172,11 @@ export async function fetchTriviaQuestion(options: FetchQuestionOptions = {}): P
     params.set('difficulty', options.difficulty);
   }
 
+  const regions = options.regions ?? DEFAULT_REGIONS;
+  if (regions && regions.length > 0) {
+    regions.forEach((region) => params.append('region', region));
+  }
+
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
       const [question] = await httpGet<TriviaQuestion[]>(`/questions?${params.toString()}`);
@@ -173,18 +189,20 @@ export async function fetchTriviaQuestion(options: FetchQuestionOptions = {}): P
         continue;
       }
 
-      return {
+      const normalized = {
         ...question,
         category: slugify(question.category ?? options.category ?? ''),
         difficulty: question.difficulty ?? options.difficulty ?? 'medium',
       };
+      return translateQuestion(normalized, 'uk');
     } catch (error) {
       // fall through to fallback
       break;
     }
   }
 
-  return fetchFallbackQuestion(options);
+  const fallbackQuestion = await fetchFallbackQuestion(options);
+  return translateQuestion(fallbackQuestion, 'uk');
 }
 
 export async function fetchTriviaQuestions(options: FetchQuestionOptions & { limit?: number } = {}) {
@@ -199,13 +217,20 @@ export async function fetchTriviaQuestions(options: FetchQuestionOptions & { lim
     params.set('difficulty', options.difficulty);
   }
 
+  const regions = options.regions ?? DEFAULT_REGIONS;
+  if (regions && regions.length > 0) {
+    regions.forEach((region) => params.append('region', region));
+  }
+
   try {
     const questions = await httpGet<TriviaQuestion[]>(`/questions?${params.toString()}`);
-    return questions.map((q) => ({
+    const normalized = questions.map((q) => ({
       ...q,
       category: slugify(q.category ?? options.category ?? ''),
       difficulty: q.difficulty ?? options.difficulty ?? 'medium',
     }));
+
+    return Promise.all(normalized.map((question) => translateQuestion(question, 'uk')));
   } catch (error) {
     const fallback = await loadFallbackQuestions();
     if (!fallback) {
@@ -236,6 +261,11 @@ export async function fetchTriviaQuestions(options: FetchQuestionOptions & { lim
       }
     }
 
-    return shuffle(pool).slice(0, limit);
+    const selected = shuffle(pool).slice(0, limit);
+    return Promise.all(selected.map((question) => translateQuestion({
+      ...question,
+      category: slugify(question.category ?? options.category ?? ''),
+      difficulty: question.difficulty ?? options.difficulty ?? 'medium',
+    }, 'uk')));
   }
 }

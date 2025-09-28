@@ -49,7 +49,7 @@ const SetTurnBodySchema = HostAuthSchema.extend({
 
 const ActivateQuestionBodySchema = HostAuthSchema.extend({
   category: z.string().trim().min(1).optional(),
-  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  difficulty: z.enum(["easy", "medium", "hard"]).optional(),
 });
 
 const MarkAnswerBodySchema = HostAuthSchema.extend({
@@ -62,27 +62,44 @@ const LeaveRoomBodySchema = z.object({
   playerId: z.string().trim().min(1),
 });
 
-function handleHostError(error: unknown, reply: FastifyReply, log: typeof fastify.log) {
+const ShareClaimBodySchema = z.object({
+  shareCode: z.string().trim().regex(/^[0-9]{4}$/),
+});
+
+function handleHostError(
+  error: unknown,
+  reply: FastifyReply,
+  log: typeof fastify.log
+) {
   const message = error instanceof Error ? error.message : String(error);
 
   const errorMap: Record<string, { status: number; body: string }> = {
-    'Room not found': { status: 404, body: 'Session not found' },
-    Forbidden: { status: 403, body: 'Invalid host secret' },
-    'Player not found': { status: 404, body: 'Player not found' },
-    'Question already in play': { status: 409, body: 'Question already in play' },
-    'Invalid question': { status: 400, body: 'Invalid question' },
-    'No active question': { status: 409, body: 'No active question' },
-    'Buzzers already open': { status: 409, body: 'Buzzers already open' },
-    'Buzz not available now': { status: 409, body: 'Buzz not available now' },
-    'You already attempted this question': { status: 409, body: 'Player already attempted' },
-    'No answering player to award points': { status: 400, body: 'No answering player' },
-    'Set a player on turn before activating a question': {
+    "Room not found": { status: 404, body: "Session not found" },
+    Forbidden: { status: 403, body: "Invalid host secret" },
+    "Player not found": { status: 404, body: "Player not found" },
+    "Question already in play": {
       status: 409,
-      body: 'Set a player on turn before activating a question',
+      body: "Question already in play",
     },
-    'Unable to fetch a unique trivia question': {
+    "Invalid question": { status: 400, body: "Invalid question" },
+    "No active question": { status: 409, body: "No active question" },
+    "Buzzers already open": { status: 409, body: "Buzzers already open" },
+    "Buzz not available now": { status: 409, body: "Buzz not available now" },
+    "You already attempted this question": {
+      status: 409,
+      body: "Player already attempted",
+    },
+    "No answering player to award points": {
+      status: 400,
+      body: "No answering player",
+    },
+    "Set a player on turn before activating a question": {
+      status: 409,
+      body: "Set a player on turn before activating a question",
+    },
+    "Unable to fetch a unique trivia question": {
       status: 502,
-      body: 'Unable to fetch a unique trivia question right now',
+      body: "Unable to fetch a unique trivia question right now",
     },
   };
 
@@ -93,14 +110,14 @@ function handleHostError(error: unknown, reply: FastifyReply, log: typeof fastif
     return { message: known.body };
   }
 
-  if (message.startsWith('Trivia API request failed')) {
+  if (message.startsWith("Trivia API request failed")) {
     reply.code(502);
-    return { message: 'Trivia provider is unavailable. Try again shortly.' };
+    return { message: "Trivia provider is unavailable. Try again shortly." };
   }
 
-  log.error(error, 'Host command failed');
+  log.error(error, "Host command failed");
   reply.code(500);
-  return { message: 'Unexpected error' };
+  return { message: "Unexpected error" };
 }
 
 fastify.post("/api/session", async (_, reply) => {
@@ -207,6 +224,66 @@ fastify.post("/api/session/:code/destroy", async (request, reply) => {
   }
 });
 
+fastify.post("/api/session/:code/share", async (request, reply) => {
+  const { code } = request.params as { code: string };
+  const body = HostAuthSchema.safeParse(request.body);
+
+  if (!body.success) {
+    reply.code(400);
+    return { message: "Invalid payload" };
+  }
+
+  try {
+    const result = store.issueShareCode(code, body.data.hostSecret);
+    return result;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message === "Room not found") {
+      reply.code(404);
+      return { message: "Session not found" };
+    }
+
+    if (message === "Forbidden") {
+      reply.code(403);
+      return { message: "Invalid host secret" };
+    }
+
+    fastify.log.warn(error, "Failed to issue share code");
+    reply.code(500);
+    return { message: "Unable to generate share code" };
+  }
+});
+
+fastify.post("/api/share/claim", async (request, reply) => {
+  const body = ShareClaimBodySchema.safeParse(request.body);
+
+  if (!body.success) {
+    reply.code(400);
+    return { message: "Invalid share code" };
+  }
+
+  try {
+    const result = store.claimShareCode(body.data.shareCode);
+    return result;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (message === "Invalid share code") {
+      reply.code(400);
+      return { message };
+    }
+
+    if (message === "Share code not found") {
+      reply.code(404);
+      return { message: "Share code expired or not found" };
+    }
+
+    fastify.log.warn(error, "Failed to claim share code");
+    reply.code(500);
+    return { message: "Unable to claim share code" };
+  }
+});
+
 fastify.post("/api/session/:code/turn", async (request, reply) => {
   const { code } = request.params as { code: string };
   const body = SetTurnBodySchema.safeParse(request.body);
@@ -302,62 +379,65 @@ fastify.post("/api/session/:code/question/cancel", async (request, reply) => {
   }
 });
 
-fastify.get('/api/trivia/categories', async (_, reply) => {
+fastify.get("/api/trivia/categories", async (_, reply) => {
   try {
     return await fetchTriviaCategories();
   } catch (error) {
-    fastify.log.error(error, 'Failed to load trivia categories');
+    fastify.log.error(error, "Failed to load trivia categories");
     reply.code(502);
-    return { message: 'Failed to load trivia categories' };
+    return { message: "Failed to load trivia categories" };
   }
 });
 
 const TriviaQuestionsQuerySchema = z.object({
   category: z.string().trim().optional(),
-  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  difficulty: z.enum(["easy", "medium", "hard"]).optional(),
   limit: z.coerce.number().int().min(1).max(20).optional(),
 });
 
-fastify.get('/api/trivia/questions', async (request, reply) => {
+fastify.get("/api/trivia/questions", async (request, reply) => {
   const query = TriviaQuestionsQuerySchema.safeParse(request.query);
 
   if (!query.success) {
     reply.code(400);
-    return { message: 'Invalid query' };
+    return { message: "Invalid query" };
   }
 
   try {
     const questions = await fetchTriviaQuestions(query.data);
     return questions;
   } catch (error) {
-    fastify.log.error(error, 'Failed to load trivia questions');
+    fastify.log.error(error, "Failed to load trivia questions");
     reply.code(502);
-    return { message: 'Failed to load trivia questions' };
+    return { message: "Failed to load trivia questions" };
   }
 });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const clientDistPath = path.resolve(__dirname, '../client');
+const clientDistPath = path.resolve(__dirname, "../client");
 
 if (existsSync(clientDistPath)) {
   await fastify.register(fastifyStatic, {
     root: clientDistPath,
-    prefix: '/',
-    index: ['index.html'],
+    prefix: "/",
+    index: ["index.html"],
   });
 
   fastify.setNotFoundHandler((request, reply) => {
-    const url = request.raw.url ?? '';
-    if (url.startsWith('/api') || url.startsWith('/ws')) {
+    const url = request.raw.url ?? "";
+    if (url.startsWith("/api") || url.startsWith("/ws")) {
       reply.callNotFound();
       return;
     }
 
-    reply.type('text/html').sendFile('index.html');
+    reply.type("text/html").sendFile("index.html");
   });
 } else {
-  fastify.log.warn({ clientDistPath }, 'Client dist directory not found; static asset serving disabled');
+  fastify.log.warn(
+    { clientDistPath },
+    "Client dist directory not found; static asset serving disabled"
+  );
 }
 
 fastify.register(async (app) => {

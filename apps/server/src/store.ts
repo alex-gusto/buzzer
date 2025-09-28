@@ -15,6 +15,8 @@ const DIFFICULTY_POINTS: Record<string, number> = {
   hard: 400,
 };
 
+const SHARE_CODE_TTL = 5 * 60 * 1000; // 5 minutes
+
 function pointsForDifficulty(difficulty: string | undefined) {
   return DIFFICULTY_POINTS[difficulty ?? 'medium'] ?? 200;
 }
@@ -26,6 +28,10 @@ function shuffleArray<T>(values: T[]): T[] {
     [result[i], result[j]] = [result[j], result[i]];
   }
   return result;
+}
+
+function generateShareCode() {
+  return String(Math.floor(1000 + Math.random() * 9000));
 }
 
 export class GameStore {
@@ -375,6 +381,7 @@ export class GameStore {
 
   snapshot(code: string): RoomSnapshot {
     const room = this.ensureRoom(code);
+    this.cleanupShareCode(room);
     return this.buildSnapshot(room);
   }
 
@@ -406,6 +413,45 @@ export class GameStore {
     }
 
     this.log.info({ code: room.code }, 'Room destroyed by host');
+  }
+
+  issueShareCode(code: string, hostSecret: string) {
+    const room = this.verifyHost(code, hostSecret);
+    this.cleanupShareCode(room);
+
+    let shareCode = generateShareCode();
+    while (this.shareCodeExists(shareCode)) {
+      shareCode = generateShareCode();
+    }
+
+    const issuedAt = Date.now();
+    room.shareCode = shareCode;
+    room.shareCodeIssuedAt = issuedAt;
+    room.shareCodeExpiresAt = issuedAt + SHARE_CODE_TTL;
+
+    this.broadcastState(room);
+    this.log.info({ code: room.code, shareCode }, 'Issued share code');
+    return { shareCode, expiresAt: room.shareCodeExpiresAt };
+  }
+
+  claimShareCode(shareCode: string) {
+    const normalized = shareCode.trim();
+    if (!/^[0-9]{4}$/.test(normalized)) {
+      throw new Error('Invalid share code');
+    }
+
+    for (const room of this.rooms.values()) {
+      this.cleanupShareCode(room);
+      if (room.shareCode === normalized) {
+        return {
+          code: room.code,
+          hostSecret: room.hostSecret,
+          expiresAt: room.shareCodeExpiresAt ?? null,
+        };
+      }
+    }
+
+    throw new Error('Share code not found');
   }
 
   removePlayer(code: string, playerId: string) {
@@ -493,12 +539,16 @@ export class GameStore {
       playerCount: number;
       questionActive: boolean;
       hostOnline: boolean;
+      shareActive: boolean;
+      shareExpiresAt: number | null;
     }> = [];
 
     for (const room of this.rooms.values()) {
+      this.cleanupShareCode(room);
       const hostOnline = Array.from(room.connections).some(
         (connection) => connection.role === 'host',
       );
+      const shareInfo = this.getActiveShareInfo(room);
 
       summaries.push({
         code: room.code,
@@ -506,6 +556,8 @@ export class GameStore {
         playerCount: room.players.size,
         questionActive: Boolean(room.activeQuestion),
         hostOnline,
+        shareActive: Boolean(shareInfo),
+        shareExpiresAt: shareInfo?.expiresAt ?? null,
       });
     }
 
@@ -514,6 +566,7 @@ export class GameStore {
   }
 
   broadcastState(room: GameRoom) {
+    this.cleanupShareCode(room);
     const staleConnections: RoomConnection[] = [];
 
     for (const connection of room.connections) {
@@ -522,6 +575,7 @@ export class GameStore {
           type: 'state',
           payload: this.buildSnapshot(room, {
             includeCorrectAnswer: connection.role === 'host',
+            includeShareCode: connection.role === 'host',
           }),
         });
         connection.socket.send(payload);
@@ -543,6 +597,7 @@ export class GameStore {
           type: 'state',
           payload: this.buildSnapshot(room, {
             includeCorrectAnswer: connection.role === 'host',
+            includeShareCode: connection.role === 'host',
           }),
         }),
       );
@@ -626,10 +681,12 @@ export class GameStore {
 
   private buildSnapshot(
     room: GameRoom,
-    options: { includeCorrectAnswer?: boolean } = {},
+    options: { includeCorrectAnswer?: boolean; includeShareCode?: boolean } = {},
   ): RoomSnapshot {
     const currentTurnId = this.getCurrentTurnPlayerId(room);
     const includeCorrectAnswer = options.includeCorrectAnswer ?? false;
+    const includeShareCode = options.includeShareCode ?? false;
+    const shareInfo = this.getActiveShareInfo(room);
 
     const players = Array.from(room.players.values()).map((player) => ({
       id: player.id,
@@ -688,6 +745,9 @@ export class GameStore {
       lastResult,
       categories: room.categories ?? null,
       usedCategorySlots: Array.from(room.usedCategorySlots),
+      shareCode: includeShareCode ? shareInfo?.code ?? null : null,
+      shareCodeIssuedAt: includeShareCode ? shareInfo?.issuedAt ?? null : null,
+      shareCodeExpiresAt: shareInfo?.expiresAt ?? null,
     };
   }
 
@@ -698,5 +758,42 @@ export class GameStore {
 
     const player = room.players.get(playerId);
     return player ? { playerId: player.id, name: player.name } : null;
+  }
+
+  private cleanupShareCode(room: GameRoom) {
+    if (!room.shareCode) {
+      return;
+    }
+
+    if (room.shareCodeExpiresAt && room.shareCodeExpiresAt > Date.now()) {
+      return;
+    }
+
+    delete room.shareCode;
+    delete room.shareCodeIssuedAt;
+    delete room.shareCodeExpiresAt;
+  }
+
+  private getActiveShareInfo(room: GameRoom) {
+    this.cleanupShareCode(room);
+    if (!room.shareCode) {
+      return null;
+    }
+
+    return {
+      code: room.shareCode,
+      issuedAt: room.shareCodeIssuedAt ?? null,
+      expiresAt: room.shareCodeExpiresAt ?? null,
+    };
+  }
+
+  private shareCodeExists(shareCode: string) {
+    for (const room of this.rooms.values()) {
+      this.cleanupShareCode(room);
+      if (room.shareCode === shareCode) {
+        return true;
+      }
+    }
+    return false;
   }
 }

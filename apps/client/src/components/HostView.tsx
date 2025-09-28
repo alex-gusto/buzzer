@@ -10,6 +10,7 @@ import {
   openQuestionForBuzzers,
   setTurn,
   getTriviaCategories,
+  shareRoom,
 } from "../api";
 import { useSessionConnection } from "../hooks/useSessionConnection";
 import type { RoomSnapshot, SocketStatus } from "../types";
@@ -74,6 +75,10 @@ export function HostView({ onExit }: HostViewProps) {
   );
   const [actionError, setActionError] = useState<string | null>(null);
   const [showDestroyConfirm, setShowDestroyConfirm] = useState(false);
+  const [shareDetails, setShareDetails] = useState<{
+    shareCode: string;
+    expiresAt: number | null;
+  } | null>(null);
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
   useEffect(() => {
@@ -119,6 +124,17 @@ export function HostView({ onExit }: HostViewProps) {
     code: session?.code ?? null,
     registerPayload,
   });
+
+  useEffect(() => {
+    if (state?.shareCode) {
+      setShareDetails({
+        shareCode: state.shareCode,
+        expiresAt: state.shareCodeExpiresAt ?? null,
+      });
+    } else {
+      setShareDetails(null);
+    }
+  }, [state?.shareCode, state?.shareCodeExpiresAt]);
 
   const players = useMemo(() => {
     if (!state) {
@@ -356,6 +372,24 @@ export function HostView({ onExit }: HostViewProps) {
     cancelQuestionMutation.isPending ||
     destroySessionMutation.isPending;
 
+  const shareRoomMutation = useMutation<{ shareCode: string; expiresAt: number | null }, Error, HostSession>({
+    mutationFn: async (payload) => shareRoom(payload.code, payload.hostSecret),
+    onSuccess: (result) => {
+      setShareDetails({ shareCode: result.shareCode, expiresAt: result.expiresAt });
+      setActionError(null);
+    },
+    onError: (error) => {
+      setActionError(error instanceof Error ? error.message : 'Unable to generate share code');
+    },
+  });
+
+  const activeShareCode = shareDetails?.shareCode ?? null;
+  const shareExpiresAt = shareDetails?.expiresAt ?? null;
+  const shareExpiresInMs = shareExpiresAt ? shareExpiresAt - Date.now() : null;
+  const shareExpiresLabel = shareExpiresInMs && shareExpiresInMs > 0
+    ? `${Math.ceil(shareExpiresInMs / 60000)} min`
+    : null;
+
   const activeQuestionStatus = useMemo(() => {
     if (!activeQuestion) {
       return null;
@@ -501,6 +535,37 @@ export function HostView({ onExit }: HostViewProps) {
                   selectedDifficulty ? formatCategoryLabel(selectedDifficulty) : '—'
                 }
               />
+
+              <section className="rounded-2xl bg-slate-900/70 px-6 py-5 text-sm text-slate-100">
+                <header className="flex flex-col gap-1">
+                  <span className="text-xs uppercase tracking-[0.3em] text-slate-400">Share board access</span>
+                  <h2 className="text-xl font-semibold text-slate-100">Broadcast a 4-digit code</h2>
+                </header>
+                <p className="mt-3 text-slate-300">
+                  Viewers can open the questions board from the home page by entering the code you share.
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => session && shareRoomMutation.mutate(session)}
+                    disabled={shareRoomMutation.isPending || !session}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:from-cyan-300 hover:to-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {shareRoomMutation.isPending ? 'Generating...' : 'Generate share code'}
+                  </button>
+                  {activeShareCode ? (
+                    <div className="flex items-baseline gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm">
+                      <span className="text-xs uppercase tracking-[0.3em] text-cyan-200">Code</span>
+                      <span className="text-2xl font-semibold tracking-[0.4em] text-cyan-100">{activeShareCode}</span>
+                      {shareExpiresLabel ? (
+                        <span className="text-xs text-cyan-100/80">expires in {shareExpiresLabel}</span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">No active code</span>
+                  )}
+                </div>
+              </section>
 
               <section className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-5 text-sm text-rose-100">
                 <header className="flex flex-col gap-1 text-rose-200">

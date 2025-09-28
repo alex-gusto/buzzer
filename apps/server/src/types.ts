@@ -51,6 +51,9 @@ export type RoomSnapshot = {
   } | null;
   categories: Record<string, string[]> | null;
   usedCategorySlots: string[];
+  shareCode: string | null;
+  shareCodeIssuedAt: number | null;
+  shareCodeExpiresAt: number | null;
 };
 
 export type RoomConnection = {
@@ -101,4 +104,7 @@ export type GameRoom = {
   categories: Record<string, string[]> | null;
   players: Map<string, Player>;
   connections: Set<RoomConnection>;
+  shareCode?: string;
+  shareCodeIssuedAt?: number;
+  shareCodeExpiresAt?: number;
 };

@@ -52,6 +52,9 @@ export type RoomSnapshot = {
   lastResult: QuestionResultSnapshot | null;
   categories: Record<string, string[]> | null;
   usedCategorySlots: string[];
+  shareCode: string | null;
+  shareCodeIssuedAt: number | null;
+  shareCodeExpiresAt: number | null;
 };
 
 export type RegisterMessage =
